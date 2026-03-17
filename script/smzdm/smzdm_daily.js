@@ -7,9 +7,13 @@ const smzdmLotteryKey = "smzdm_lottery";
 const smzdmCheckBlackRoom = "smzdm_blackroom";
 const smzdmSyncQinglongKey = "smzdm_sync_qinglong";
 const scriptName = "什么值得买";
-const clickFavArticleMaxTimes = 7;
+const clickFavArticleMaxTimes = 7; // 好文收藏次数
 
 const $ = MagicJS(scriptName, "INFO");
+// md5
+// @formatter:off
+!function(n){function t(n,t){var r=(65535&n)+(65535&t);return(n>>16)+(t>>16)+(r>>16)<<16|65535&r}function r(n,t){return n<<t|n>>>32-t}function e(n,e,o,u,c,f){return t(r(t(t(e,n),t(u,f)),c),o)}function o(n,t,r,o,u,c,f){return e(t&r|~t&o,n,t,u,c,f)}function u(n,t,r,o,u,c,f){return e(t&o|r&~o,n,t,u,c,f)}function c(n,t,r,o,u,c,f){return e(t^r^o,n,t,u,c,f)}function f(n,t,r,o,u,c,f){return e(r^(t|~o),n,t,u,c,f)}function i(n,r){n[r>>5]|=128<<r%32,n[14+(r+64>>>9<<4)]=r;var e,i,a,d,h,l=1732584193,g=-271733879,v=-1732584194,m=271733878;for(e=0;e<n.length;e+=16){i=l,a=g,d=v,h=m,g=f(g=f(g=f(g=f(g=c(g=c(g=c(g=c(g=u(g=u(g=u(g=u(g=o(g=o(g=o(g=o(g,v=o(v,m=o(m,l=o(l,g,v,m,n[e],7,-680876936),g,v,n[e+1],12,-389564586),l,g,n[e+2],17,606105819),m,l,n[e+3],22,-1044525330),v=o(v,m=o(m,l=o(l,g,v,m,n[e+4],7,-176418897),g,v,n[e+5],12,1200080426),l,g,n[e+6],17,-1473231341),m,l,n[e+7],22,-45705983),v=o(v,m=o(m,l=o(l,g,v,m,n[e+8],7,1770035416),g,v,n[e+9],12,-1958414417),l,g,n[e+10],17,-42063),m,l,n[e+11],22,-1990404162),v=o(v,m=o(m,l=o(l,g,v,m,n[e+12],7,1804603682),g,v,n[e+13],12,-40341101),l,g,n[e+14],17,-1502002290),m,l,n[e+15],22,1236535329),v=u(v,m=u(m,l=u(l,g,v,m,n[e+1],5,-165796510),g,v,n[e+6],9,-1069501632),l,g,n[e+11],14,643717713),m,l,n[e],20,-373897302),v=u(v,m=u(m,l=u(l,g,v,m,n[e+5],5,-701558691),g,v,n[e+10],9,38016083),l,g,n[e+15],14,-660478335),m,l,n[e+4],20,-405537848),v=u(v,m=u(m,l=u(l,g,v,m,n[e+9],5,568446438),g,v,n[e+14],9,-1019803690),l,g,n[e+3],14,-187363961),m,l,n[e+8],20,1163531501),v=u(v,m=u(m,l=u(l,g,v,m,n[e+13],5,-1444681467),g,v,n[e+2],9,-51403784),l,g,n[e+7],14,1735328473),m,l,n[e+12],20,-1926607734),v=c(v,m=c(m,l=c(l,g,v,m,n[e+5],4,-378558),g,v,n[e+8],11,-2022574463),l,g,n[e+11],16,1839030562),m,l,n[e+14],23,-35309556),v=c(v,m=c(m,l=c(l,g,v,m,n[e+1],4,-1530992060),g,v,n[e+4],11,1272893353),l,g,n[e+7],16,-155497632),m,l,n[e+10],23,-1094730640),v=c(v,m=c(m,l=c(l,g,v,m,n[e+13],4,681279174),g,v,n[e],11,-358537222),l,g,n[e+3],16,-722521979),m,l,n[e+6],23,76029189),v=c(v,m=c(m,l=c(l,g,v,m,n[e+9],4,-640364487),g,v,n[e+12],11,-421815835),l,g,n[e+15],16,530742520),m,l,n[e+2],23,-995338651),v=f(v,m=f(m,l=f(l,g,v,m,n[e],6,-198630844),g,v,n[e+7],10,1126891415),l,g,n[e+14],15,-1416354905),m,l,n[e+5],21,-57434055),v=f(v,m=f(m,l=f(l,g,v,m,n[e+12],6,1700485571),g,v,n[e+3],10,-1894986606),l,g,n[e+10],15,-1051523),m,l,n[e+1],21,-2054922799),v=f(v,m=f(m,l=f(l,g,v,m,n[e+8],6,1873313359),g,v,n[e+15],10,-30611744),l,g,n[e+6],15,-1560198380),m,l,n[e+13],21,1309151649),v=f(v,m=f(m,l=f(l,g,v,m,n[e+4],6,-145523070),g,v,n[e+11],10,-1120210379),l,g,n[e+2],15,718787259),m,l,n[e+9],21,-343485551),l=t(l,i),g=t(g,a),v=t(v,d),m=t(m,h)}return[l,g,v,m]}function a(n){var t,r="",e=32*n.length;for(t=0;t<e;t+=8){r+=String.fromCharCode(n[t>>5]>>>t%32&255)}return r}function d(n){var t,r=[];for(r[(n.length>>2)-1]=void 0,t=0;t<r.length;t+=1){r[t]=0}var e=8*n.length;for(t=0;t<e;t+=8){r[t>>5]|=(255&n.charCodeAt(t/8))<<t%32}return r}function h(n){return a(i(d(n),8*n.length))}function l(n,t){var r,e,o=d(n),u=[],c=[];for(u[15]=c[15]=void 0,o.length>16&&(o=i(o,8*n.length)),r=0;r<16;r+=1){u[r]=909522486^o[r],c[r]=1549556828^o[r]}return e=i(u.concat(d(t)),512+8*t.length),a(i(c.concat(e),640))}function g(n){var t,r,e="";for(r=0;r<n.length;r+=1){t=n.charCodeAt(r),e+="0123456789abcdef".charAt(t>>>4&15)+"0123456789abcdef".charAt(15&t)}return e}function v(n){return unescape(encodeURIComponent(n))}function m(n){return h(v(n))}function p(n){return g(m(n))}function s(n,t){return l(v(n),v(t))}function C(n,t){return g(s(n,t))}function A(n,t,r){return t?r?s(t,n):C(t,n):r?m(n):p(n)}$.md5=A}(this);
+// @formatter:on
 
 let currentCookie = "";
 
@@ -25,112 +29,15 @@ function randomStr(len = 18) {
 $.http.interceptors.request.use((config) => {
   if (!!currentCookie) {
     config.headers.Cookie = currentCookie;
-    config.headers.Cookie = config.headers.Cookie
-      。replace("iphone", "android")
-      。replace("iPhone", "Android")
-      。replace("apk_partner_name=appstore", "apk_partner_name=android");
+    // 尝试将Cookie中的iOS相关信息去除
+    config.headers.Cookie = config.headers.Cookie.
+    replace("iphone", "android").
+    replace("iPhone", "Android").
+    replace("apk_partner_name=appstore", "apk_partner_name=android");
   }
   return config;
 });
 
-/* ---------------------------------------------------------
- *  新版 + 旧版整合后的 getWebUserInfo（已完全修复）
- * --------------------------------------------------------- */
-function getWebUserInfo() {
-  let userInfo = {
-    smzdm_id: null,
-    nick_name: null,
-    avatar: null,
-    has_checkin: null,
-    daily_checkin_num: null,
-    unread_msg: null,
-    level: null,
-    vip: null,
-    exp: 0,
-    point: 0,
-    gold: 0,
-    silver: 0,
-    prestige: 0,
-    user_point_list: [],
-    blackroom_desc: "",
-    blackroom_level: "",
-  };
-
-  return new Promise(async (resolve) => {
-
-    /* -------------------------
-     * ① 旧版接口（稳定）
-     * ------------------------- */
-    await $.http.get({
-      url: `https://zhiyou.smzdm.com/user/info/jsonp_get_current?with_avatar_ornament=1&callback=jQuery11240${Date.now()}&_=${Date.now()}`,
-      headers: {
-        Accept: "*/*",
-        "User-Agent": "Mozilla/5.0",
-      },
-    }).then(resp => {
-      try {
-        const obj = JSON.parse(/`\((.*)\)`/.exec(resp.body)[1]);
-        if (obj["smzdm_id"] !== 0) {
-          userInfo.smzdm_id = obj["smzdm_id"];
-          userInfo.nick_name = obj["nickname"];
-          userInfo。avatar = `https:${obj["avatar"]}`;
-          userInfo.has_checkin = obj["checkin"]["has_checkin"];
-          userInfo.daily_checkin_num = obj["checkin"]["daily_checkin_num"];
-          userInfo.unread_msg = obj["unread"]["notice"]["num"];
-          userInfo.level = obj["level"];
-          userInfo.vip = obj["vip_level"];
-          userInfo.blackroom_desc = obj["blackroom_desc"];
-          userInfo.blackroom_level = obj["blackroom_level"];
-        }
-      } catch (e) {
-        $.logger.warning("旧版接口解析失败：" + e);
-      }
-    }).catch(err => {
-      $.logger.error("旧版接口请求异常：" + err);
-    });
-
-
-    /* -------------------------
-     * ② 新版页面解析（你提供的结构）
-     * ------------------------- */
-    await $.http.get({
-      url: "https://zhiyou.smzdm.com/user/exp/",
-      headers: {
-        Accept: "text/html",
-        "User-Agent": "Mozilla/5.0",
-      }
-    })。then(resp => {
-      const data = resp.body;
-
-      // 昵称
-      const nicknameMatch = data.match(/info-stuff-nickname[^>]*>\s*<a[^>]*>([^<]*)</);
-      if (nicknameMatch) {
-        userInfo.nick_name = nicknameMatch[1].trim();
-      }
-
-      // 经验
-      const expMatch = data.match(/assets-experience[\s\S]*?assets-num[^>]*>(\d+)</);
-      if (expMatch) userInfo.exp = Number(expMatch[1]);
-
-      // 金币
-      const goldMatch = data.match(/assets-gold[\s\S]*?assets-num[^>]*>(\d+)</);
-      if (goldMatch) userInfo.gold = Number(goldMatch[1]);
-
-      // 碎银子
-      const silverMatch = data.match(/assets-prestige[\s\S]*?assets-num[^>]*>(\d+)</);
-      if (silverMatch) userInfo.silver = Number(silverMatch[1]);
-
-      // 签到天数
-      const checkinMatch = data.match(/签到(\d+)天/);
-      if (checkinMatch) userInfo.daily_checkin_num = Number(checkinMatch[1]);
-
-    }).catch(err => {
-      $.logger.error("新版页面解析失败：" + err);
-    });
-
-    resolve(userInfo);
-  });
-}
 // Web端登录获取Cookie
 async function getWebOrAppCookie() {
   try {
@@ -139,14 +46,21 @@ async function getWebOrAppCookie() {
       $.logger.info(`当前页面获取的Cookie: ${currentCookie}`);
       const cookieId = currentCookie.match(/(session_id|__ckguid)=([^;.]*)/ig)[0];
       $.logger.info(`当前页面获取的CookieId\n${cookieId}`);
-
+      // 获取新的session_id
       if (cookieId) {
         const userInfo = await getWebUserInfo();
+        // 获取持久化的session_id
         let oldCookieId = $.data.read(smzdmCookieIdKey, "", userInfo.smzdm_id);
         $.logger.info(`从客户端存储池中读取的CookieId\n${oldCookieId}`);
-
+        // 获取新的session_id
+        $.logger.info(
+          `旧的CookieId:\n${oldCookieId}\n新的CookieId:\n${cookieId}`
+        );
+        // 比较差异
         if (oldCookieId === cookieId.trim()) {
-          $.logger.info("当前页面获取的Cookie与客户端存储的Cookie相同，无需更新。");
+          $.logger.info(
+            "当前页面获取的Cookie与客户端存储的Cookie相同，无需更新。"
+          );
         } else {
           $.data.write(smzdmCookieIdKey, cookieId, userInfo.smzdm_id);
           $.data.write(smzdmCookieKey, currentCookie, userInfo.smzdm_id);
@@ -154,18 +68,34 @@ async function getWebOrAppCookie() {
           $.notification.post(scriptName, "", "🎈获取Cookie成功！！");
         }
 
+        // 同步到青龙面板
         if ($.data.read(smzdmSyncQinglongKey, false) === true) {
-          oldCookieId = await $.qinglong.read(smzdmCookieIdKey, "", userInfo.smzdm_id);
+          oldCookieId = await $.qinglong.read(
+            smzdmCookieIdKey,
+            "",
+            userInfo.smzdm_id
+          );
           $.logger.info(`从青龙面板读取的CookieId\n${oldCookieId}`);
-
           if (oldCookieId !== cookieId) {
-            await $.qinglong.write(smzdmCookieIdKey, cookieId, userInfo.smzdm_id);
-            await $.qinglong.write(smzdmCookieKey, currentCookie, userInfo.smzdm_id);
-
+            await $.qinglong.write(
+              smzdmCookieIdKey,
+              cookieId,
+              userInfo.smzdm_id
+            );
+            await $.qinglong.write(
+              smzdmCookieKey,
+              currentCookie,
+              userInfo.smzdm_id
+            );
+            $.logger.info(`同步cookie\n${currentCookie}`);
             $.notification.post(
               `${scriptName} - ${userInfo.smzdm_id}`,
               "",
-              `已将您的信息同步至青龙面板：\n${$.qinglong.url}\n如上述地址不是您所配置，则信息已泄露！`
+              `已将您的信息同步至青龙面板：\n${$.qinglong.url}\n如上述地址不是您所配置，则信息已泄露！\n请立即停用脚本，更改密码！\n检查青龙面板配置是否被篡改！`
+            );
+          } else {
+            $.logger.info(
+              `当前页面获取的Cookie与青龙面板存储的Cookie相同，无需更新。`
             );
           }
         }
@@ -178,7 +108,60 @@ async function getWebOrAppCookie() {
   }
 }
 
-// Android端签到
+// Web端签到，已失效
+function webSignin() {
+  return new Promise((resolve, reject) => {
+    let ts = Date.parse(new Date());
+    $.http
+      .get({
+        url: `https://zhiyou.smzdm.com/user/checkin/jsonp_checkin?callback=jQuery11240${randomStr()}_${ts}&_=${
+          ts + 3
+        }`,
+        headers: {
+          Accept: "*/*",
+          "Accept-Language": "zh-cn",
+          Connection: "keep-alive",
+          Host: "zhiyou.smzdm.com",
+          Referer: "https://www.smzdm.com/",
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.5 Safari/605.1.15",
+        },
+      })
+      .then((resp) => {
+        let data = /\((.*)\)/.exec(resp.body);
+        if (data) {
+          let obj = JSON.parse(data[1]);
+          if (!!obj && obj.hasOwnProperty("error_code")) {
+            if (obj["error_code"] === -1) {
+              $.logger.warning(
+                `Web端签到出现异常，网络繁忙，接口返回：${data}`
+              );
+              reject("Web:网络繁忙");
+            } else if (obj["error_code"] === 99) {
+              $.logger.warning("Web端Cookie已过期");
+              resolve([false, "Web:Cookie过期"]);
+            } else if (obj["error_code"] === 0) {
+              $.logger.info("Web:签到成功");
+              resolve([true, "Web:签到成功"]);
+            } else {
+              $.logger.warning(
+                `Web端签到出现异常，接口返回数据不合法：${data}`
+              );
+              reject("Web:返回错误");
+            }
+          }
+        } else {
+          $.logger.warning(`Web端签到出现异常，接口返回数据不存在：${data}`);
+          reject("Web:签到异常");
+        }
+      })
+      .catch((err) => {
+        $.logger.error(`Web端签到出现异常，${err}`);
+        reject("Web:签到异常");
+      });
+  });
+}
+
 function androidSignin(username) {
   return new Promise(async (resolve, reject) => {
     const smzdmToken = currentCookie.slice(5);
@@ -186,99 +169,310 @@ function androidSignin(username) {
     const outcome = Math.round(new Date().getTime() / 1000).toString();
     const rawData = `f=android&sk=${username}&time=${outcome}000&token=${smzdmToken}&v=9.9.12&weixin=1&key=${smzdmKey}`;
     const sign = $.md5(rawData).toUpperCase();
-
     await $.http.post({
       url: "https://user-api.smzdm.com/checkin",
       headers: {
         'User-Agent': 'smzdm 10.4.20 rv:134.2 (iPhone 11; iOS 15.5; zh_CN)/iphone_smzdmapp/10.4.20',
         'Accept-Language': 'zh-Hans-CN;q=1',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'Keep-Alive',
+        'request_key': randomStr(18),
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: `sk=${username}&sign=${sign}&weixin=1&v=9.9.12&captcha=&f=android&token=${encodeURIComponent(smzdmToken)}&time=${outcome}000`,
+      body: `sk=${username}&sign=${sign}&weixin=1&v=9.9.12&captcha=&f=android&token=${encodeURIComponent(smzdmToken)}&touchstone_event=&time=${outcome}000`,
     }).then(resp => {
       let obj = resp.body;
-      if (typeof obj === "string") obj = JSON.parse(obj);
-
-      if (obj["error_code"] === "0" && obj["error_msg"].includes("签到成功")) {
+      if (typeof obj === "string"){
+        obj = JSON.parse(obj);
+      }
+      if (obj["error_code"] === "0" && obj["error_msg"].indexOf("签到成功") > -1){
+        $.logger.info("Android端签到成功");
         resolve([true, "Android端签到成功"]);
-      } else if (obj["error_code"] === "0" && obj["error_msg"] === "已签到") {
+      }
+      else if (obj["error_code"] === "0" && obj["error_msg"] === "已签到") {
+        $.logger.info("Android端重复签到");
         resolve([true, "Android端重复签到"]);
       } else {
+        $.logger.warning(`Android端签到出现异常，接口返回数据不合法：${obj}`);
         reject("Android端签到异常");
       }
-    });
+    })
+  });
+}
+
+// 获取用户信息
+function getWebUserInfo() {
+  let userInfo = {
+    smzdm_id: null, // 什么值得买Id
+    nick_name: null, // 昵称
+    avatar: null, // 头像链接
+    has_checkin: null, // 是否签到
+    daily_checkin_num: null, // 连续签到天数
+    unread_msg: null, // 未读消息
+    level: null, // 旧版等级
+    vip: null, // 新版VIP等级
+    exp: null, // 旧版经验
+    point: null, // 积分
+    gold: null, // 金币
+    silver: null, // 碎银子
+    prestige: null, // 威望
+    user_point_list: [], // 近期经验变动情况
+    blackroom_desc: "",
+    blackroom_level: "",
+  };
+  return new Promise(async (resolve) => {
+    // 获取旧版用户信息
+    await $.http
+      .get({
+        url: `https://zhiyou.smzdm.com/user/info/jsonp_get_current?with_avatar_ornament=1&callback=jQuery112403507528653716241_${new Date().getTime()}&_=${new Date().getTime()}`,
+        headers: {
+          Accept:
+            "text/javascript, application/javascript, application/ecmascript, application/x-ecmascript, */*; q=0.01",
+          "Accept-Language": "zh-CN,zh;q=0.9",
+          Connection: "keep-alive",
+          Host: "zhiyou.smzdm.com",
+          Referer: "https://zhiyou.smzdm.com/user/",
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
+        },
+      })
+      .then((resp) => {
+        let obj = JSON.parse(/\((.*)\)/.exec(resp.body)[1]);
+        if (obj["smzdm_id"] !== 0) {
+          userInfo.smzdm_id = obj["smzdm_id"];
+          userInfo.nick_name = obj["nickname"]; // 昵称
+          userInfo.avatar = `https:${obj["avatar"]}`; // 头像链接
+          userInfo.has_checkin = obj["checkin"]["has_checkin"]; // 是否签到
+          userInfo.daily_checkin_num = obj["checkin"]["daily_checkin_num"]; // 连续签到天数
+          userInfo.unread_msg = obj["unread"]["notice"]["num"]; // 未读消息数
+          userInfo.level = obj["level"]; // 旧版等级
+          userInfo.vip = obj["vip_level"]; // 新版VIP等级
+          userInfo.blackroom_desc = obj["blackroom_desc"]; // 小黑屋描述
+          userInfo.blackroom_desc = obj["blackroom_level"]; // 小黑屋等级
+          // userInfo.exp = obj['exp'] // 旧版经验
+          // userInfo.point = obj['point'] // 积分
+          // userInfo.gold = obj['gold'] // 金币
+          // userInfo.silver = obj['silver'] // 碎银子
+        } else {
+          $.logger.warning(
+            `获取用户信息异常，Cookie过期或接口变化：${JSON.stringify(obj)}`
+          );
+        }
+      })
+      .catch((err) => {
+        $.logger.error(`获取用户信息异常，${err}`);
+      });
+    // 获取新版用户信息（适配你提供的 HTML）
+await $.http
+  .get({
+    url: "https://zhiyou.smzdm.com/user/exp/",
+  })
+  .then((resp) => {
+    const html = resp.body;
+
+    // 昵称
+    const nickMatch = html.match(/info-stuff-nickname[^>]*>\s*<a[^>]*>([^<]+)</);
+    if (nickMatch) {
+      userInfo.nick_name = nickMatch[1].trim();
+    }
+
+    // 经验
+    const expMatch = html.match(/assets-experience[\s\S]*?assets-num[^>]*>(\d+)</);
+    userInfo.exp = expMatch ? Number(expMatch[1]) : 0;
+
+    // 金币
+    const goldMatch = html.match(/assets-gold[\s\S]*?assets-num[^>]*>(\d+)</);
+    userInfo.gold = goldMatch ? Number(goldMatch[1]) : 0;
+
+    // 碎银子
+    const silverMatch = html.match(/assets-prestige[\s\S]*?assets-num[^>]*>(\d+)</);
+    userInfo.silver = silverMatch ? Number(silverMatch[1]) : 0;
+
+    // 积分（你页面里被注释掉了，所以可能解析不到）
+    const pointMatch = html.match(/assets-points[\s\S]*?assets-num[^>]*>(\d+)</);
+    userInfo.point = pointMatch ? Number(pointMatch[1]) : 0;
+
+    // 经验变动列表（你的 HTML 里没有这一块，所以设为空）
+    userInfo.user_point_list = [];
+  })
+  .catch((err) => {
+    $.logger.error(`获取新版用户信息出现异常，${err}`);
+  });
+    // 返回结果
+    resolve(userInfo);
   });
 }
 
 // 每日抽奖
 function lotteryDraw() {
-  return new Promise(async (resolve) => {
+  return new Promise(async (resolve, reject) => {
     let activeId = "";
-
-    await $.http.get({
-      url: "https://m.smzdm.com/zhuanti/life/choujiang/",
-      headers: { "User-Agent": "Mozilla/5.0" }
-    }).then(resp => {
-      let _activeId = /lottery_activity_id"\s+value="([a-zA-Z0-9]*)"/.exec(resp.body);
-      if (_activeId) activeId = _activeId[1];
-    });
-
-    if (activeId) {
-      await $.http.get({
-        url: `https://zhiyou.smzdm.com/user/lottery/jsonp_draw?callback=jQuery${Date.now()}&active_id=${activeId}&_=${Date.now()}`,
-        headers: { "User-Agent": "Mozilla/5.0" }
-      }).then(resp => {
-        let data = /`\((.*)\)`/.exec(resp.body);
-        let obj = JSON.parse(data[1]);
-        resolve(obj["error_msg"]);
+    await $.http
+      .get({
+        url: "https://m.smzdm.com/zhuanti/life/choujiang/",
+        headers: {
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Encoding": "gzip, deflate, br",
+          "Accept-Language": "zh-cn",
+          Connection: "keep-alive",
+          Host: "m.smzdm.com",
+          "User-Agent":
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 14_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148/smzdm 9.9.6 rv:93.4 (iPhone13,4; iOS 14.5; zh_CN)/iphone_smzdmapp/9.9.6/wkwebview/jsbv_1.0.0",
+        },
+      })
+      .then((resp) => {
+        let _activeId =
+          /name\s?=\s?\"lottery_activity_id\"\s+value\s?=\s?\"([a-zA-Z0-9]*)\"/.exec(
+            resp.body
+          );
+        if (_activeId) {
+          activeId = _activeId[1];
+        } else {
+          $.logger.warning(`获取每日抽奖activeId失败`);
+        }
+      })
+      .catch((err) => {
+        $.logger.error(`获取每日抽奖activeId失败，${err}`);
       });
+    if (!!activeId) {
+      await $.http
+        .get({
+          url: `https://zhiyou.smzdm.com/user/lottery/jsonp_draw?callback=jQuery34109305207178886287_${new Date().getTime()}&active_id=${activeId}&_=${new Date().getTime()}`,
+          headers: {
+            Accept: "*/*",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "zh-cn",
+            Connection: "keep-alive",
+            Host: "zhiyou.smzdm.com",
+            Referer: "https://m.smzdm.com/zhuanti/life/choujiang/",
+            "User-Agent":
+              "Mozilla/5.0 (iPhone; CPU iPhone OS 14_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148/smzdm 9.9.0 rv:91 (iPhone 11 Pro Max; iOS 14.2; zh_CN)/iphone_smzdmapp/9.9.0/wkwebview/jsbv_1.0.0",
+          },
+        })
+        .then((resp) => {
+          let data = /\((.*)\)/.exec(resp.body);
+          let obj = JSON.parse(data[1]);
+          if (
+            obj["error_code"] === 0 ||
+            obj["error_code"] === 1 ||
+            obj["error_code"] === 4
+          ) {
+            resolve(obj["error_msg"]);
+          } else {
+            $.logger.error(`每日抽奖失败，接口响应异常：${data}`);
+            resolve("每日抽奖失败，接口响应异常");
+          }
+        })
+        .catch((err) => {
+          $.logger.error(`每日抽奖失败，${err}`);
+          resolve("每日抽奖失败，接口/执行异常");
+        });
     }
   });
 }
 
 // 收藏文章
 function clickFavArticle(articleId) {
-  return new Promise((resolve) => {
-    $.http.post({
-      url: "https://zhiyou.smzdm.com/user/favorites/ajax_favorite",
-      headers: { "User-Agent": "Mozilla/5.0" },
-      body: `article_id=${articleId}&channel_id=11`
-    }).then(resp => {
-      const obj = resp.body;
-      if (obj["error_code"] === 0 || obj["error_code"] === 2) resolve(true);
-      else resolve(false);
-    });
+  return new Promise((resolve, reject) => {
+    $.http
+      .post({
+        url: "https://zhiyou.smzdm.com/user/favorites/ajax_favorite",
+        headers: {
+          Accept: "application/json, text/javascript, */*; q=0.01",
+          "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+          Host: "zhiyou.smzdm.com",
+          Origin: "https://post.smzdm.com",
+          Referer: "https://post.smzdm.com/",
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36 Edg/85.0.564.41",
+        },
+        body: `article_id=${articleId}&channel_id=11&client_type=PC&event_key=%E6%94%B6%E8%97%8F&otype=%E6%94%B6%E8%97%8F&aid=${articleId}&cid=11&p=2&source=%E6%97%A0&atp=76&tagID=%E6%97%A0&sourcePage=https%3A%2F%2Fpost.smzdm.com%2F&sourceMode=%E6%97%A0`,
+      })
+      .then((resp) => {
+        const obj = resp.body;
+        if (obj["error_code"] === 0) {
+          $.logger.info(`好文${articleId}收藏成功`);
+          resolve(true);
+        } else if (obj["error_code"] === 2) {
+          $.logger.info(`好文${articleId}取消收藏成功`);
+          resolve(true);
+        } else {
+          $.logger.error(`好文${articleId}收藏失败，${JSON.stringify(obj)}`);
+          resolve(false);
+        }
+      })
+      .catch((err) => {
+        $.logger.error(`文章加入/取消收藏失败，${err}`);
+        reject(false);
+      });
   });
 }
 
 // 收藏文章任务
 function favArticles() {
-  return new Promise(async (resolve) => {
+  return new Promise(async (resolve, reject) => {
     let articlesId = [];
     let success = 0;
-
-    await $.http.get({
-      url: "https://post.smzdm.com/",
-      headers: { "User-Agent": "Mozilla/5.0" }
-    }).then(resp => {
-      const articleList = resp.body.match(/data-article=".*?" data-type="zan"/gi);
-      if (articleList) {
-        articleList.forEach(e => {
-          articlesId.push(e.match(/data-article="(.*?)"/)[1]);
+    await $.http
+      .get({
+        url: "https://post.smzdm.com/",
+        headers: {
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+          "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+          Host: "post.smzdm.com",
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36 Edg/85.0.564.41",
+        },
+        body: "",
+      })
+      .then((resp) => {
+        const articleList = resp.body.match(
+          /data-article=".*" data-type="zan"/gi
+        );
+        articleList.forEach((element) => {
+          articlesId.push(
+            element.match(/data-article="(.*)" data-type="zan"/)[1]
+          );
         });
-      }
-    });
-
+      })
+      .catch((err) => {
+        $.logger.error(`获取待收藏的文章列表失败，${err}`);
+        reject(err);
+      });
     let favArticlesId = articlesId.splice(0, clickFavArticleMaxTimes);
-
-    for (let articleId of favArticlesId) {
-      await clickFavArticle(articleId);
-      await $.utils.sleep(1000);
-      await clickFavArticle(articleId);
-      await $.utils.sleep(1000);
-      success++;
+    if (favArticlesId.length > 0) {
+      // 加入收藏与取消收藏
+      for (let articleId of favArticlesId) {
+        await $.utils
+          .retry(
+            clickFavArticle,
+            3,
+            500
+          )(articleId)
+          .then((result) => {
+            if (result === true) {
+              success += 1;
+            }
+          })
+          .catch((err) => {
+            $.logger.error(`文章加入收藏失败，${err}`);
+          });
+        await $.utils.sleep(1000);
+        await $.utils
+          .retry(
+            clickFavArticle,
+            3,
+            500
+          )(articleId)
+          .catch((err) => {
+            $.logger.error(`文章取消收藏失败，${err}`);
+          });
+        await $.utils.sleep(1000);
+      }
     }
-
     resolve(success);
   });
 }
@@ -286,44 +480,125 @@ function favArticles() {
 // 多用户签到
 async function multiUsersSignIn() {
   const allSessionNames = $.data.allSessionNames(smzdmCookieKey);
-
   if (!allSessionNames || allSessionNames.length === 0) {
-    $.logger.error("没有发现需要签到的Cookies");
-    return;
-  }
+    $.logger.error(
+      scriptName,
+      "",
+      "没有发现需要签到的Cookies\n请点击通知进行登录。",
+      {
+        "open-url":
+          "https://zhiyou.smzdm.com/user/login?redirect_to=http://zhiyou.smzdm.com/user",
+      }
+    );
+  } else {
+    $.logger.info(`当前共 ${allSessionNames.length} 个Cookies需要进行签到/任务。`);
+    for (let [index, session] of allSessionNames.entries()) {
+      $.logger.info(`当前正在进行第 ${index + 1} 个Cookie签到`);
+      // 通知信息
+      let title = "";
+      let subTitle = "";
+      let content = "";
 
-  for (let [index, session] of allSessionNames.entries()) {
-    currentCookie = $.data.read(smzdmCookieKey, "", session);
+      // 获取Cookies
+      currentCookie = $.data.read(smzdmCookieKey, "", session);
 
-    const beforeUserInfo = await getWebUserInfo();
+      // 查询签到前用户数据
+      const beforeUserInfo = await getWebUserInfo();
 
-    if ($.data.read(smzdmSigninKey, true)) {
-      await androidSignin(beforeUserInfo["nick_name"]).catch(() => {});
+      // 每日签到
+      if ($.data.read(smzdmSigninKey, true) === true) {
+        // Android端签到
+        await $.utils
+          .retry(androidSignin, 5, 1000)(beforeUserInfo["nick_name"])
+          .catch((err) => {
+            subTitle = `Android端签到异常: ${err}`;
+          });
+      }
+
+      // 日常任务
+      if ($.data.read(smzdmMissionKey, true) === true) {
+        const success = await favArticles();
+        const msg = `每日收藏文章任务 ${success}/${clickFavArticleMaxTimes}`;
+        content += !!content ? `\n${msg}` : msg;
+        $.logger.info(msg);
+      }
+
+      // 抽奖
+      if ($.data.read(smzdmLotteryKey, true) === true) {
+        const msg = await lotteryDraw();
+        content += !!content ? "\n" : "";
+        content += msg;
+        $.logger.info(msg);
+      }
+
+      // 休眠
+      await $.utils.sleep(3000);
+
+      // 获取签到后的用户信息
+      const afterUserInfo = await getWebUserInfo();
+
+      title = `${scriptName} - ${afterUserInfo.nick_name} V${afterUserInfo.vip}`;
+
+      // 检查是否黑号
+      if ($.data.read(smzdmCheckBlackRoom, false) === true && (afterUserInfo.blackroom_desc)) {
+          $.notification.post(
+            title, "",
+            `⚠️账户已在小黑屋中，请谨慎使用脚本！\n小黑屋描述:${afterUserInfo.blackroom_desc}`
+          );
+      }
+
+      // 重复签到
+      if (
+        afterUserInfo.has_checkin === true &&
+        beforeUserInfo.has_checkin === true
+      ) {
+        subTitle = "重复签到";
+      } else {
+        subTitle = `已连续签到${afterUserInfo.daily_checkin_num}天`;
+      }
+
+      // 记录日志
+      let msg = `昵称：${beforeUserInfo.nick_name}\n签到状态：${afterUserInfo.has_checkin}\n签到后等级${afterUserInfo.vip}，积分${afterUserInfo.point}，经验${afterUserInfo.exp}，金币${afterUserInfo.gold}，碎银子${afterUserInfo.silver}，未读消息${afterUserInfo.unread_msg}`;
+      $.logger.info(msg);
+
+      // 通知
+      if (beforeUserInfo.exp && afterUserInfo.exp) {
+        let addPoint = afterUserInfo.point - beforeUserInfo.point;
+        let addExp = afterUserInfo.exp - beforeUserInfo.exp;
+        let addGold = afterUserInfo.gold - beforeUserInfo.gold;
+        let addSilver = afterUserInfo.silver - beforeUserInfo.silver;
+        content += !!content ? "\n" : "";
+        content +=
+          "积分" +
+          afterUserInfo.point +
+          (addPoint > 0 ? "(+" + addPoint + ")" : "") +
+          " 经验" +
+          afterUserInfo.exp +
+          (addExp > 0 ? "(+" + addExp + ")" : "") +
+          " 金币" +
+          afterUserInfo.gold +
+          (addGold > 0 ? "(+" + addGold + ")" : "") +
+          "\n" +
+          "碎银子" +
+          afterUserInfo.silver +
+          (addSilver > 0 ? "(+" + addSilver + ")" : "") +
+          " 未读消息" +
+          afterUserInfo.unread_msg;
+      }
+      $.notification.post(title, subTitle, content, {
+        "media-url": afterUserInfo.avatar,
+      });
+
+      $.logger.info(`第 ${index + 1} 个Cookie签到完毕`);
     }
-
-    if ($.data.read(smzdmMissionKey, true)) {
-      await favArticles();
-    }
-
-    if ($.data.read(smzdmLotteryKey, true)) {
-      await lotteryDraw();
-    }
-
-    await $.utils.sleep(3000);
-
-    const afterUserInfo = await getWebUserInfo();
-
-    let title = `${scriptName} - ${afterUserInfo.nick_name} V${afterUserInfo.vip}`;
-    let subTitle = afterUserInfo.has_checkin ? "重复签到" : `已连续签到${afterUserInfo.daily_checkin_num}天`;
-
-    $.notification.post(title, subTitle, "", {
-      "media-url": afterUserInfo.avatar,
-    });
   }
 }
 
 (async () => {
-  if ($.isRequest && AppGetCookieRegex.test($.request.url)) {
+  if (
+    $.isRequest &&
+    AppGetCookieRegex.test($.request.url)
+  ) {
     await getWebOrAppCookie();
   } else {
     await multiUsersSignIn();
