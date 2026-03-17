@@ -262,7 +262,7 @@ function getWebUserInfo() {
       .catch((err) => {
         $.logger.error(`获取用户信息异常，${err}`);
       });
-    // 获取新版用户信息（适配你提供的 HTML）
+// 获取新版用户信息（适配你提供的 HTML）
 await $.http
   .get({
     url: "https://zhiyou.smzdm.com/user/exp/",
@@ -298,6 +298,7 @@ await $.http
   .catch((err) => {
     $.logger.error(`获取新版用户信息出现异常，${err}`);
   });
+
     // 返回结果
     resolve(userInfo);
   });
@@ -429,14 +430,7 @@ function favArticles() {
         body: "",
       })
       .then((resp) => {
-// 新版 SMZDM 首页文章列表解析
-const matches = resp.body.match(/https:\/\/post\.smzdm\.com\/p\/([a-zA-Z0-9]+)\//g) || [];
-matches.forEach(url => {
-  const idMatch = url.match(/p\/([a-zA-Z0-9]+)\//);
-  if (idMatch) {
-    articlesId.push(idMatch[1]);
-  }
-});
+        const articleList = resp.body.match(
           /data-article=".*" data-type="zan"/gi
         );
         articleList.forEach((element) => {
