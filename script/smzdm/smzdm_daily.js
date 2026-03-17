@@ -379,18 +379,27 @@ function clickFavArticle(articleId) {
         url: "https://zhiyou.smzdm.com/user/favorites/ajax_favorite",
         headers: {
           Accept: "application/json, text/javascript, */*; q=0.01",
-          "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+          "Accept-Language": "zh-CN,zh;q=0.9",
           "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
           Host: "zhiyou.smzdm.com",
           Origin: "https://post.smzdm.com",
           Referer: "https://post.smzdm.com/",
           "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36 Edg/85.0.564.41",
+            "smzdm 10.4.20 rv:134.2 (iPhone 11; iOS 15.5; zh_CN)/iphone_smzdmapp/10.4.20",
         },
         body: `article_id=${articleId}&channel_id=11&client_type=PC&event_key=%E6%94%B6%E8%97%8F&otype=%E6%94%B6%E8%97%8F&aid=${articleId}&cid=11&p=2&source=%E6%97%A0&atp=76&tagID=%E6%97%A0&sourcePage=https%3A%2F%2Fpost.smzdm.com%2F&sourceMode=%E6%97%A0`,
       })
       .then((resp) => {
-        const obj = resp.body;
+        let obj = resp.body;
+        if (typeof obj === "string") {
+          try {
+            obj = JSON.parse(obj);
+          } catch (e) {
+            $.logger.error(`收藏接口返回非 JSON，可能被风控：${obj}`);
+            return resolve(false);
+          }
+        }
+
         if (obj["error_code"] === 0) {
           $.logger.info(`好文${articleId}收藏成功`);
           resolve(true);
@@ -408,6 +417,7 @@ function clickFavArticle(articleId) {
       });
   });
 }
+
 
 // 收藏文章任务
 function favArticles() {
