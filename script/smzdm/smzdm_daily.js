@@ -505,8 +505,14 @@ function favArticles() {
         },
       });
 
-      let obj = resp.body;
-$.logger.error("收藏任务 API 返回内容：" + obj);   // ← 加这一行
+let obj = resp.body;
+
+// ⭐ 关键：无论是字符串还是对象，都格式化打印
+try {
+  $.logger.error("收藏任务 API 返回内容：" + JSON.stringify(obj));
+} catch (e) {
+  $.logger.error("收藏任务 API 返回内容（无法 stringify）：" + obj);
+}
 
 if (typeof obj === "string") {
   try {
@@ -516,6 +522,7 @@ if (typeof obj === "string") {
     return resolve(0);
   }
 }
+
 
       const rows = obj?.data?.rows || [];
 
