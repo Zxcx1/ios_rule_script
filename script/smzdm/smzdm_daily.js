@@ -488,13 +488,19 @@ function clickFavArticle(articleId) {
       });
   });
 }
-// 获取文章列表（带 sign）
+// 获取文章列表（带 DES sk + sign）
 async function getArticleList() {
   try {
     const tokenMatch = currentCookie.match(/sess=([^;]+)/);
     const token = tokenMatch ? tokenMatch[1] : "";
-    const sk = "1";
 
+    // ⭐ 生成时间戳
+    const ts = `${Math.round(Date.now() / 1000)}000`;
+
+    // ⭐ 生成 DES sk（关键）
+    const sk = desEncrypt(token + ts, "smzdm_key");
+
+    // ⭐ 带 sk 参与 sign
     const form = signFormData({
       sk,
       token,
@@ -525,7 +531,6 @@ async function getArticleList() {
     throw err;
   }
 }
-
 
 // 收藏文章任务（最终稳定版：使用带 sign 的移动端 API）
 async function favArticles() {
