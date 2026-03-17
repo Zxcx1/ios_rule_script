@@ -494,45 +494,24 @@ function favArticles() {
   return new Promise(async (resolve) => {
     let success = 0;
 
-try {
-  const resp = await $.http.get({
-    url: "https://post.m.smzdm.com/v1/article/recommend?page=1&limit=20",
-    headers: {
-      "User-Agent":
-        "smzdm_android_V10.4.26 rv:866 (Redmi Note 3;Android10.0;zh)smzdmapp",
-      Accept: "application/json",
-    },
-  });
+    try {
+      const resp = await $.http.get({
+        url: "https://post.m.smzdm.com/v1/article/recommend?page=1&limit=20",
+        headers: {
+          "User-Agent":
+            "smzdm_android_V10.4.26 rv:866 (Redmi Note 3;Android10.0;zh)smzdmapp",
+          Accept: "application/json",
+        },
+      });
 
-  // ⭐ 无论如何先打印 resp.body（关键）
-  $.logger.error("收藏任务 API 原始返回：" + JSON.stringify(resp.body));
+      // ⭐ 无论如何先打印 resp.body（关键）
+      $.logger.error("收藏任务 API 原始返回：" + JSON.stringify(resp.body));
 
-  let obj = resp.body;
+      let obj = resp.body;
 
-  if (typeof obj === "string") {
-    obj = JSON.parse(obj);
-  }
-
-  const rows = obj?.data?.rows || [];
-
-  if (rows.length === 0) {
-    $.logger.warning("❗ 未找到可收藏的文章（API 返回为空）");
-    return resolve(0);
-  }
-
-  // ...后面收藏逻辑不变...
-
-} catch (err) {
-
-  // ⭐⭐ 关键：在 catch 里打印 resp.body
-  $.logger.error("收藏任务异常：" + err);
-
-  if (err?.response?.body) {
-    $.logger.error("收藏任务 API 返回内容（来自 catch）：" + JSON.stringify(err.response.body));
-  }
-
-  return resolve(0);
-}
+      if (typeof obj === "string") {
+        obj = JSON.parse(obj);
+      }
 
       const rows = obj?.data?.rows || [];
 
@@ -558,13 +537,23 @@ try {
       }
 
       resolve(success);
+
     } catch (err) {
-      $.logger.error(`收藏任务执行异常：${err}`);
-      resolve(success);
+
+      $.logger.error("收藏任务异常：" + err);
+
+      // ⭐⭐ 关键：在 catch 里打印 resp.body
+      if (err?.response?.body) {
+        $.logger.error(
+          "收藏任务 API 返回内容（来自 catch）：" +
+            JSON.stringify(err.response.body)
+        );
+      }
+
+      resolve(0);
     }
   });
 }
-
 
 // 多用户签到
 async function multiUsersSignIn() {
