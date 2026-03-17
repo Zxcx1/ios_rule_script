@@ -290,103 +290,86 @@ function androidSignin() {
   });
 }
 
-// 获取用户信息
+// 获取用户信息（新版，解析 HTML，不再使用 JSONP）
 function getWebUserInfo() {
   let userInfo = {
-    smzdm_id: null, // 什么值得买Id
-    nick_name: null, // 昵称
-    avatar: null, // 头像链接
-    has_checkin: null, // 是否签到
-    daily_checkin_num: null, // 连续签到天数
-    unread_msg: null, // 未读消息
-    level: null, // 旧版等级
-    vip: null, // 新版VIP等级
-    exp: null, // 旧版经验
-    point: null, // 积分
-    gold: null, // 金币
-    silver: null, // 碎银子
-    prestige: null, // 威望
-    user_point_list: [], // 近期经验变动情况
+    smzdm_id: null,
+    nick_name: null,
+    avatar: null,
+    has_checkin: null,
+    daily_checkin_num: null,
+    unread_msg: null,
+    level: null,
+    vip: null,
+    exp: 0,
+    point: 0,
+    gold: 0,
+    silver: 0,
+    prestige: 0,
+    user_point_list: [],
     blackroom_desc: "",
     blackroom_level: "",
   };
+
   return new Promise(async (resolve) => {
-    // 获取旧版用户信息
-    await $.http
-      .get({
-        url: `https://zhiyou.smzdm.com/user/info/jsonp_get_current?with_avatar_ornament=1&callback=jQuery112403507528653716241_${new Date().getTime()}&_=${new Date().getTime()}`,
+    try {
+      // 访问新版用户主页
+      const resp = await $.http.get({
+        url: "https://zhiyou.smzdm.com/user/",
         headers: {
-          Accept:
-            "text/javascript, application/javascript, application/ecmascript, application/x-ecmascript, */*; q=0.01",
-          "Accept-Language": "zh-CN,zh;q=0.9",
-          Connection: "keep-alive",
-          Host: "zhiyou.smzdm.com",
-          Referer: "https://zhiyou.smzdm.com/user/",
           "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 14_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
         },
-      })
-      .then((resp) => {
-        let obj = JSON.parse(/`\((.*)\)`/.exec(resp.body)[1]);
-        if (obj["smzdm_id"] !== 0) {
-          userInfo.smzdm_id = obj["smzdm_id"];
-          userInfo.nick_name = obj["nickname"]; // 昵称
-          userInfo.avatar = `https:${obj["avatar"]}`; // 头像链接
-          userInfo.has_checkin = obj["checkin"]["has_checkin"]; // 是否签到
-          userInfo.daily_checkin_num = obj["checkin"]["daily_checkin_num"]; // 连续签到天数
-          userInfo.unread_msg = obj["unread"]["notice"]["num"]; // 未读消息数
-          userInfo.level = obj["level"]; // 旧版等级
-          userInfo.vip = obj["vip_level"]; // 新版VIP等级
-          userInfo.blackroom_desc = obj["blackroom_desc"]; // 小黑屋描述
-          userInfo.blackroom_desc = obj["blackroom_level"]; // 小黑屋等级
-        } else {
-          $.logger.warning(
-            `获取用户信息异常，Cookie过期或接口变化：${JSON.stringify(obj)}`
-          );
-        }
-      })
-      .catch((err) => {
-        $.logger.error(`获取用户信息异常，${err}`);
       });
 
-    // 获取新版用户信息
-    await $.http
-      .get({
-        url: "https://zhiyou.smzdm.com/user/exp/",
-      })
-      .then((resp) => {
-        const html = resp.body;
+      const html = resp.body;
 
-        const nickMatch = html.match(
-          /info-stuff-nickname[^>]*>\s*<a[^>]*>([^<]+)</
-        );
-        if (nickMatch) {
-          userInfo.nick_name = nickMatch[1].trim();
-        }
+      // 昵称
+      const nickMatch = html.match(/info-stuff-nickname[^>]*>\s*<a[^>]*>([^<]+)</);
+      if (nickMatch) userInfo.nick_name = nickMatch[1].trim();
 
-        const expMatch = html.match(
-          /assets-experience[\s\S]*?assets-num[^>]*>(\d+)</
-        );
-        userInfo.exp = expMatch ? Number(expMatch[1]) : 0;
+      // 头像
+      const avatarMatch = html.match(/class="avatar"[^>]*src="([^"]+)"/);
+      if (avatarMatch) userInfo.avatar = avatarMatch[1].startsWith("http")
+        ? avatarMatch[1]
+        : "https:" + avatarMatch[1];
 
-        const goldMatch = html.match(
-          /assets-gold[\s\S]*?assets-num[^>]*>(\d+)</
-        );
-        userInfo.gold = goldMatch ? Number(goldMatch[1]) : 0;
+      // VIP 等级
+      const vipMatch = html.match(/vip-level[^>]*>(\d+)</);
+      if (vipMatch) userInfo.vip = Number(vipMatch[1]);
 
-        const silverMatch = html.match(
-          /assets-prestige[\s\S]*?assets-num[^>]*>(\d+)</
-        );
-        userInfo.silver = silverMatch ? Number(silverMatch[1]) : 0;
+      // 连续签到天数
+      const checkinMatch = html.match(/连续签到[^>]*?(\d+)\s*天/);
+      if (checkinMatch) userInfo.daily_checkin_num = Number(checkinMatch[1]);
 
-        userInfo.point = 0;
-        userInfo.user_point_list = [];
-      })
-      .catch((err) => {
-        $.logger.error(`获取新版用户信息出现异常，${err}`);
-      });
+      // 是否签到
+      const hasCheckinMatch = html.match(/已签到|今日已签到/);
+      userInfo.has_checkin = !!hasCheckinMatch;
 
-    resolve(userInfo);
+      // 未读消息
+      const unreadMatch = html.match(/id="nav_notice_num">(\d+)</);
+      if (unreadMatch) userInfo.unread_msg = Number(unreadMatch[1]);
+
+      // 经验
+      const expMatch = html.match(/assets-experience[\s\S]*?assets-num[^>]*>(\d+)</);
+      if (expMatch) userInfo.exp = Number(expMatch[1]);
+
+      // 金币
+      const goldMatch = html.match(/assets-gold[\s\S]*?assets-num[^>]*>(\d+)</);
+      if (goldMatch) userInfo.gold = Number(goldMatch[1]);
+
+      // 碎银子
+      const silverMatch = html.match(/assets-prestige[\s\S]*?assets-num[^>]*>(\d+)</);
+      if (silverMatch) userInfo.silver = Number(silverMatch[1]);
+
+      // 积分（新版页面没有，设为 0）
+      userInfo.point = 0;
+
+      resolve(userInfo);
+    } catch (err) {
+      $.logger.error(`获取用户信息异常（新版 HTML 解析）：${err}`);
+      resolve(userInfo);
+    }
   });
 }
 
