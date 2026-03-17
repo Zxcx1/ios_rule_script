@@ -494,35 +494,45 @@ function favArticles() {
   return new Promise(async (resolve) => {
     let success = 0;
 
-    try {
-      // 移动端文章推荐 API（稳定）
-      const resp = await $.http.get({
-        url: "https://post.m.smzdm.com/v1/article/recommend?page=1&limit=20",
-        headers: {
-          "User-Agent":
-            "smzdm_android_V10.4.26 rv:866 (Redmi Note 3;Android10.0;zh)smzdmapp",
-          Accept: "application/json",
-        },
-      });
-
-let obj = resp.body;
-
-// ⭐ 关键：无论是字符串还是对象，都格式化打印
 try {
-  $.logger.error("收藏任务 API 返回内容：" + JSON.stringify(obj));
-} catch (e) {
-  $.logger.error("收藏任务 API 返回内容（无法 stringify）：" + obj);
-}
+  const resp = await $.http.get({
+    url: "https://post.m.smzdm.com/v1/article/recommend?page=1&limit=20",
+    headers: {
+      "User-Agent":
+        "smzdm_android_V10.4.26 rv:866 (Redmi Note 3;Android10.0;zh)smzdmapp",
+      Accept: "application/json",
+    },
+  });
 
-if (typeof obj === "string") {
-  try {
+  // ⭐ 无论如何先打印 resp.body（关键）
+  $.logger.error("收藏任务 API 原始返回：" + JSON.stringify(resp.body));
+
+  let obj = resp.body;
+
+  if (typeof obj === "string") {
     obj = JSON.parse(obj);
-  } catch (e) {
-    $.logger.error("收藏任务 JSON 解析失败：" + e);
+  }
+
+  const rows = obj?.data?.rows || [];
+
+  if (rows.length === 0) {
+    $.logger.warning("❗ 未找到可收藏的文章（API 返回为空）");
     return resolve(0);
   }
-}
 
+  // ...后面收藏逻辑不变...
+
+} catch (err) {
+
+  // ⭐⭐ 关键：在 catch 里打印 resp.body
+  $.logger.error("收藏任务异常：" + err);
+
+  if (err?.response?.body) {
+    $.logger.error("收藏任务 API 返回内容（来自 catch）：" + JSON.stringify(err.response.body));
+  }
+
+  return resolve(0);
+}
 
       const rows = obj?.data?.rows || [];
 
