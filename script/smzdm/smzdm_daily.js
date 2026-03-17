@@ -438,14 +438,11 @@ function favArticles() {
         body: "",
       })
       .then((resp) => {
-        const articleList = resp.body.match(
-          /data-article=".*" data-type="zan"/gi
-        );
-        articleList.forEach((element) => {
-          articlesId.push(
-            element.match(/data-article="(.*)" data-type="zan"/)[1]
-          );
-        });
+const matches = resp.body.match(/data-article-id="([a-zA-Z0-9]+)"/g) || [];
+matches.forEach(m => {
+  const id = m.match(/data-article-id="([a-zA-Z0-9]+)"/)[1];
+  articlesId.push(id);
+});
       })
       .catch((err) => {
         $.logger.error(`获取待收藏的文章列表失败，${err}`);
