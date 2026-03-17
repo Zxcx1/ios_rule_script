@@ -163,40 +163,40 @@ function webSignin() {
 }
 
 function androidSignin(username) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve) => {
     const smzdmToken = currentCookie.slice(5);
-    const smzdmKey = 'apr1$AwP!wRRT$gJ/q.X24poeBInlUJC';
-    const outcome = Math.round(new Date().getTime() / 1000).toString();
+    const smzdmKey = "apr1$AwP!wRRT$gJ/q.X24poeBInlUJC";
+    const outcome = Math.round(Date.now() / 1000).toString();
     const rawData = `f=android&sk=${username}&time=${outcome}000&token=${smzdmToken}&v=9.9.12&weixin=1&key=${smzdmKey}`;
     const sign = $.md5(rawData).toUpperCase();
-    await $.http.post({
-      url: "https://user-api.smzdm.com/checkin",
-      headers: {
-        'User-Agent': 'smzdm 10.4.20 rv:134.2 (iPhone 11; iOS 15.5; zh_CN)/iphone_smzdmapp/10.4.20',
-        'Accept-Language': 'zh-Hans-CN;q=1',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'Keep-Alive',
-        'request_key': randomStr(18),
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: `sk=${username}&sign=${sign}&weixin=1&v=9.9.12&captcha=&f=android&token=${encodeURIComponent(smzdmToken)}&touchstone_event=&time=${outcome}000`,
-    }).then(resp => {
+
+    try {
+      const resp = await $.http.post({
+        url: "https://user-api.smzdm.com/checkin",
+        headers: {
+          "User-Agent": "smzdm 10.4.20",
+          "Content-Type": "application/x-www-form-urlencoded",
+          "request_key": randomStr(18),
+        },
+        body: `sk=${username}&sign=${sign}&weixin=1&v=9.9.12&captcha=&f=android&token=${encodeURIComponent(smzdmToken)}&time=${outcome}000`,
+      });
+
       let obj = resp.body;
-      if (typeof obj === "string"){
-        obj = JSON.parse(obj);
-      }
-      if (obj["error_code"] === "0" && obj["error_msg"].indexOf("签到成功") > -1){
-        $.logger.info("Android端签到成功");
-        resolve([true, "Android端签到成功"]);
-      }
-      else if (obj["error_code"] === "0" && obj["error_msg"] === "已签到") {
-        $.logger.info("Android端重复签到");
-        resolve([true, "Android端重复签到"]);
+      if (typeof obj === "string") obj = JSON.parse(obj);
+
+      // 新版接口逻辑
+      if (obj.error_code === 0) {
+        const msg = obj.error_msg || "ok";
+        $.logger.info("Android签到返回：" + msg);
+        resolve([true, msg]);
       } else {
-        $.logger.warning(`Android端签到出现异常，接口返回数据不合法：${obj}`);
-        reject("Android端签到异常");
+        $.logger.warning("Android签到失败：" + JSON.stringify(obj));
+        resolve([false, "签到失败"]);
       }
-    })
+    } catch (e) {
+      $.logger.error("Android签到异常：" + e);
+      resolve([false, "签到异常"]);
+    }
   });
 }
 
