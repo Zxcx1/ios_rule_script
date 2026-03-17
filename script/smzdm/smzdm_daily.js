@@ -490,32 +490,42 @@ function clickFavArticle(articleId) {
 }
 // 获取文章列表（带 sign）
 async function getArticleList() {
-  const tokenMatch = currentCookie.match(/sess=([^;]+)/);
-  const token = tokenMatch ? tokenMatch[1] : "";
-  const sk = "1";
+  try {
+    const tokenMatch = currentCookie.match(/sess=([^;]+)/);
+    const token = tokenMatch ? tokenMatch[1] : "";
+    const sk = "1";
 
-  const form = signFormData({
-    sk,
-    token,
-    page: 1,
-    limit: 20,
-  });
+    const form = signFormData({
+      sk,
+      token,
+      page: 1,
+      limit: 20,
+    });
 
-  const query = Object.keys(form)
-    .map((k) => `${k}=${encodeURIComponent(form[k])}`)
-    .join("&");
+    const query = Object.keys(form)
+      .map((k) => `${k}=${encodeURIComponent(form[k])}`)
+      .join("&");
 
-  const resp = await $.http.get({
-    url: `https://article-api.smzdm.com/v1/article/recommend?${query}`,
-    headers: {
-      "User-Agent":
-        "smzdm_android_V10.4.26 rv:866 (Redmi Note 3;Android10.0;zh)smzdmapp",
-      Accept: "application/json",
-    },
-  });
+    const resp = await $.http.get({
+      url: `https://article-api.smzdm.com/v1/article/recommend?${query}`,
+      headers: {
+        "User-Agent":
+          "smzdm_android_V10.4.26 rv:866 (Redmi Note 3;Android10.0;zh)smzdmapp",
+        Accept: "application/json",
+      },
+    });
 
-  return resp.body;
+    return resp.body;
+
+  } catch (err) {
+    $.logger.error("getArticleList() 请求异常：" + err);
+    if (err?.response?.body) {
+      $.logger.error("getArticleList() 返回内容：" + JSON.stringify(err.response.body));
+    }
+    throw err;
+  }
 }
+
 
 // 收藏文章任务（最终稳定版：使用带 sign 的移动端 API）
 async function favArticles() {
