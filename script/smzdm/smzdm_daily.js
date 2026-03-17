@@ -489,45 +489,39 @@ function clickFavArticle(articleId) {
   });
 }
 
-// 收藏文章任务（最终版，完全匹配 data-article-id）
+// 收藏文章任务（最终稳定版：使用移动端 API）
 function favArticles() {
   return new Promise(async (resolve) => {
-    let articlesId = [];
     let success = 0;
 
     try {
+      // 移动端文章推荐 API（稳定）
       const resp = await $.http.get({
-        url: "https://post.smzdm.com/",
+        url: "https://post.m.smzdm.com/v1/article/recommend?page=1&limit=20",
         headers: {
-          Accept:
-            "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
           "User-Agent":
-            "Mozilla/5.0 (iPhone; CPU iPhone OS 14_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
+            "smzdm_android_V10.4.26 rv:866 (Redmi Note 3;Android10.0;zh)smzdmapp",
+          Accept: "application/json",
         },
       });
 
-      const html = resp.body;
+      let obj = resp.body;
+      if (typeof obj === "string") obj = JSON.parse(obj);
 
-      // ① 你的 HTML 真实结构：data-article-id="xxxxxx"
-      const matches = html.match(/data-article-id="([a-zA-Z0-9]+)"/g) || [];
+      const rows = obj?.data?.rows || [];
 
-      matches.forEach((m) => {
-        const id = m.match(/data-article-id="([a-zA-Z0-9]+)"/)[1];
-        articlesId.push(id);
-      });
-
-      // 去重
-      articlesId = [...new Set(articlesId)];
-
-      if (articlesId.length === 0) {
-        $.logger.warning("❗ 未找到可收藏的文章（PC 端结构可能还有其他区域）");
+      if (rows.length === 0) {
+        $.logger.warning("❗ 未找到可收藏的文章（API 返回为空）");
         return resolve(0);
       }
 
-      // 取前 7 篇
-      const favList = articlesId.slice(0, clickFavArticleMaxTimes);
+      // 取前 7 篇文章
+      const favList = rows.slice(0, clickFavArticleMaxTimes);
 
-      for (let articleId of favList) {
+      for (let item of favList) {
+        const articleId = item.article_id;
+        if (!articleId) continue;
+
         const ok1 = await clickFavArticle(articleId);
         if (ok1) success++;
 
@@ -544,8 +538,6 @@ function favArticles() {
     }
   });
 }
-
-
 
 // 多用户签到
 async function multiUsersSignIn() {
