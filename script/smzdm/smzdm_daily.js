@@ -108,15 +108,13 @@ async function getWebOrAppCookie() {
   }
 }
 
-// Web端签到，已失效
+// Web端签到，已失效（保留占位）
 function webSignin() {
   return new Promise((resolve, reject) => {
     let ts = Date.parse(new Date());
     $.http
       .get({
-        url: `https://zhiyou.smzdm.com/user/checkin/jsonp_checkin?callback=jQuery11240${randomStr()}_${ts}&_=${
-          ts + 3
-        }`,
+        url: `https://zhiyou.smzdm.com/user/checkin/jsonp_checkin?callback=jQuery11240${randomStr()}_${ts}&_=${ts + 3}`,
         headers: {
           Accept: "*/*",
           "Accept-Language": "zh-cn",
@@ -128,7 +126,7 @@ function webSignin() {
         },
       })
       .then((resp) => {
-        let data = /\((.*)\)/.exec(resp.body);
+        let data = /`\((.*)\)`/.exec(resp.body);
         if (data) {
           let obj = JSON.parse(data[1]);
           if (!!obj && obj.hasOwnProperty("error_code")) {
@@ -162,36 +160,128 @@ function webSignin() {
   });
 }
 
-function androidSignin(username) {
-  return new Promise(async (resolve) => {
-    const smzdmToken = currentCookie.slice(5);
-    const smzdmKey = "apr1$AwP!wRRT$gJ/q.X24poeBInlUJC";
-    const outcome = Math.round(Date.now() / 1000).toString();
-    const rawData = `f=android&sk=${username}&time=${outcome}000&token=${smzdmToken}&v=9.9.12&weixin=1&key=${smzdmKey}`;
-    const sign = $.md5(rawData).toUpperCase();
+// =====================
+//  Android 签到辅助配置
+// =====================
+const SIGN_KEY = "apr1$AwP!wRRT$gJ/q.X24poeBInlUJC";
+const APP_VERSION = "10.4.26";
+const APP_VERSION_REV = "866";
 
+// 构造安卓化 Cookie（不依赖外部库）
+function buildAndroidCookie(cookie) {
+  function update(key, value) {
+    if (cookie.includes(`${key}=`)) {
+      return cookie.replace(new RegExp(`${key}=[^;]*`), `${key}=${value}`);
+    }
+    return cookie + `; ${key}=${value}`;
+  }
+
+  cookie = cookie.replace(/iphone/gi, "android");
+
+  cookie = update("device_smzdm_version", APP_VERSION);
+  cookie = update("device_smzdm_version_code", APP_VERSION_REV);
+  cookie = update("device_system_version", "10.0");
+  cookie = update("device_type", "Android");
+  cookie = update("device_smzdm", "android");
+  cookie = update("device_name", "Android");
+  cookie = update("partner_name", "smzdm_download");
+  cookie = update("apk_partner_name", "smzdm_download");
+
+  return cookie;
+}
+
+// 参数签名（对齐 hex-ci 的 signFormData 思路）
+function signFormData(data) {
+  const newData = {
+    weixin: 1,
+    basic_v: 0,
+    f: "android",
+    v: APP_VERSION,
+    time: `${Math.round(Date.now() / 1000)}000`,
+    ...data,
+  };
+
+  const keys = Object.keys(newData)
+    .filter((k) => newData[k] !== "")
+    .sort();
+
+  const signData = keys
+    .map((k) => `${k}=${String(newData[k]).replace(/\s+/, "")}`)
+    .join("&");
+
+  const sign = $.md5(`${signData}&key=${SIGN_KEY}`).toUpperCase();
+
+  return { ...newData, sign };
+}
+
+// 安卓 UA
+function getAndroidHeaders() {
+  return {
+    "User-Agent": `smzdm_android_V${APP_VERSION} rv:${APP_VERSION_REV} (Redmi Note 3;Android10.0;zh)smzdmapp`,
+    "Content-Type": "application/x-www-form-urlencoded",
+    "request_key": randomStr(18),
+  };
+}
+
+// Android 签到（不再用昵称当 sk）
+function androidSignin() {
+  return new Promise(async (resolve) => {
     try {
-      const resp = await $.http.post({
-        url: "https://user-api.smzdm.com/checkin",
-        headers: {
-          "User-Agent": "smzdm 10.4.20",
-          "Content-Type": "application/x-www-form-urlencoded",
-          "request_key": randomStr(18),
-        },
-        body: `sk=${username}&sign=${sign}&weixin=1&v=9.9.12&captcha=&f=android&token=${encodeURIComponent(smzdmToken)}&time=${outcome}000`,
+      // 1. 备份原始 Cookie
+      const originalCookie = currentCookie;
+
+      // 2. 构造安卓化 Cookie，并写回 currentCookie，让拦截器自动带上
+      currentCookie = buildAndroidCookie(currentCookie);
+
+      // 3. 从 Cookie 中提取 token（sess）
+      const tokenMatch = currentCookie.match(/sess=([^;]+)/);
+      if (!tokenMatch) {
+        $.logger.error("Android签到失败：未找到 sess=，无法生成 token");
+        currentCookie = originalCookie;
+        return resolve([false, "token 缺失"]);
+      }
+      const token = tokenMatch[1];
+
+      // 4. 这里 sk 先用一个固定占位（如果你以后想接 DES，可以再升级）
+      const sk = "1";
+
+      // 5. 生成签名参数
+      const form = signFormData({
+        sk,
+        token,
+        captcha: "",
       });
 
-      let obj = resp.body;
-      if (typeof obj === "string") obj = JSON.parse(obj);
+      const body = Object.keys(form)
+        .map((k) => `${k}=${encodeURIComponent(form[k])}`)
+        .join("&");
 
-      // 新版接口逻辑
+      const resp = await $.http.post({
+        url: "https://user-api.smzdm.com/checkin",
+        headers: getAndroidHeaders(),
+        body,
+      });
+
+      // 6. 还原 Cookie
+      currentCookie = originalCookie;
+
+      let obj = resp.body;
+      if (typeof obj === "string") {
+        try {
+          obj = JSON.parse(obj);
+        } catch (e) {
+          $.logger.warning("Android签到返回非 JSON：" + obj);
+          return resolve([false, "返回非 JSON"]);
+        }
+      }
+
       if (obj.error_code === 0) {
         const msg = obj.error_msg || "ok";
-        $.logger.info("Android签到返回：" + msg);
+        $.logger.info("Android签到成功：" + msg);
         resolve([true, msg]);
       } else {
         $.logger.warning("Android签到失败：" + JSON.stringify(obj));
-        resolve([false, "签到失败"]);
+        resolve([false, obj.error_msg || "签到失败"]);
       }
     } catch (e) {
       $.logger.error("Android签到异常：" + e);
@@ -237,7 +327,7 @@ function getWebUserInfo() {
         },
       })
       .then((resp) => {
-        let obj = JSON.parse(/\((.*)\)/.exec(resp.body)[1]);
+        let obj = JSON.parse(/`\((.*)\)`/.exec(resp.body)[1]);
         if (obj["smzdm_id"] !== 0) {
           userInfo.smzdm_id = obj["smzdm_id"];
           userInfo.nick_name = obj["nickname"]; // 昵称
@@ -249,10 +339,6 @@ function getWebUserInfo() {
           userInfo.vip = obj["vip_level"]; // 新版VIP等级
           userInfo.blackroom_desc = obj["blackroom_desc"]; // 小黑屋描述
           userInfo.blackroom_desc = obj["blackroom_level"]; // 小黑屋等级
-          // userInfo.exp = obj['exp'] // 旧版经验
-          // userInfo.point = obj['point'] // 积分
-          // userInfo.gold = obj['gold'] // 金币
-          // userInfo.silver = obj['silver'] // 碎银子
         } else {
           $.logger.warning(
             `获取用户信息异常，Cookie过期或接口变化：${JSON.stringify(obj)}`
@@ -262,42 +348,44 @@ function getWebUserInfo() {
       .catch((err) => {
         $.logger.error(`获取用户信息异常，${err}`);
       });
-// 获取新版用户信息（适配你提供的 HTML）
-await $.http
-  .get({
-    url: "https://zhiyou.smzdm.com/user/exp/",
-  })
-  .then((resp) => {
-    const html = resp.body;
 
-    // 昵称
-    const nickMatch = html.match(/info-stuff-nickname[^>]*>\s*<a[^>]*>([^<]+)</);
-    if (nickMatch) {
-      userInfo.nick_name = nickMatch[1].trim();
-    }
+    // 获取新版用户信息
+    await $.http
+      .get({
+        url: "https://zhiyou.smzdm.com/user/exp/",
+      })
+      .then((resp) => {
+        const html = resp.body;
 
-    // 经验
-    const expMatch = html.match(/assets-experience[\s\S]*?assets-num[^>]*>(\d+)</);
-    userInfo.exp = expMatch ? Number(expMatch[1]) : 0;
+        const nickMatch = html.match(
+          /info-stuff-nickname[^>]*>\s*<a[^>]*>([^<]+)</
+        );
+        if (nickMatch) {
+          userInfo.nick_name = nickMatch[1].trim();
+        }
 
-    // 金币
-    const goldMatch = html.match(/assets-gold[\s\S]*?assets-num[^>]*>(\d+)</);
-    userInfo.gold = goldMatch ? Number(goldMatch[1]) : 0;
+        const expMatch = html.match(
+          /assets-experience[\s\S]*?assets-num[^>]*>(\d+)</
+        );
+        userInfo.exp = expMatch ? Number(expMatch[1]) : 0;
 
-    // 碎银子
-    const silverMatch = html.match(/assets-prestige[\s\S]*?assets-num[^>]*>(\d+)</);
-    userInfo.silver = silverMatch ? Number(silverMatch[1]) : 0;
+        const goldMatch = html.match(
+          /assets-gold[\s\S]*?assets-num[^>]*>(\d+)</
+        );
+        userInfo.gold = goldMatch ? Number(goldMatch[1]) : 0;
 
-    // 积分（你页面里没有）
-    userInfo.point = 0;
+        const silverMatch = html.match(
+          /assets-prestige[\s\S]*?assets-num[^>]*>(\d+)</
+        );
+        userInfo.silver = silverMatch ? Number(silverMatch[1]) : 0;
 
-    // 经验变动列表（你页面里没有）
-    userInfo.user_point_list = [];
-  })
-  .catch((err) => {
-    $.logger.error(`获取新版用户信息出现异常，${err}`);
-  });
-    // 返回结果
+        userInfo.point = 0;
+        userInfo.user_point_list = [];
+      })
+      .catch((err) => {
+        $.logger.error(`获取新版用户信息出现异常，${err}`);
+      });
+
     resolve(userInfo);
   });
 }
@@ -350,7 +438,7 @@ function lotteryDraw() {
           },
         })
         .then((resp) => {
-          let data = /\((.*)\)/.exec(resp.body);
+          let data = /`\((.*)\)`/.exec(resp.body);
           let obj = JSON.parse(data[1]);
           if (
             obj["error_code"] === 0 ||
@@ -418,7 +506,6 @@ function clickFavArticle(articleId) {
   });
 }
 
-
 // 收藏文章任务
 function favArticles() {
   return new Promise(async (resolve, reject) => {
@@ -430,7 +517,8 @@ function favArticles() {
         headers: {
           Accept:
             "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-          "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+          "Accept-Language":
+            "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
           Host: "post.smzdm.com",
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36 Edg/85.0.564.41",
@@ -438,11 +526,12 @@ function favArticles() {
         body: "",
       })
       .then((resp) => {
-const matches = resp.body.match(/data-article-id="([a-zA-Z0-9]+)"/g) || [];
-matches.forEach(m => {
-  const id = m.match(/data-article-id="([a-zA-Z0-9]+)"/)[1];
-  articlesId.push(id);
-});
+        const matches =
+          resp.body.match(/data-article-id="([a-zA-Z0-9]+)"/g) || [];
+        matches.forEach((m) => {
+          const id = m.match(/data-article-id="([a-zA-Z0-9]+)"/)[1];
+          articlesId.push(id);
+        });
       })
       .catch((err) => {
         $.logger.error(`获取待收藏的文章列表失败，${err}`);
@@ -450,14 +539,9 @@ matches.forEach(m => {
       });
     let favArticlesId = articlesId.splice(0, clickFavArticleMaxTimes);
     if (favArticlesId.length > 0) {
-      // 加入收藏与取消收藏
       for (let articleId of favArticlesId) {
         await $.utils
-          .retry(
-            clickFavArticle,
-            3,
-            500
-          )(articleId)
+          .retry(clickFavArticle, 3, 500)(articleId)
           .then((result) => {
             if (result === true) {
               success += 1;
@@ -468,11 +552,7 @@ matches.forEach(m => {
           });
         await $.utils.sleep(1000);
         await $.utils
-          .retry(
-            clickFavArticle,
-            3,
-            500
-          )(articleId)
+          .retry(clickFavArticle, 3, 500)(articleId)
           .catch((err) => {
             $.logger.error(`文章取消收藏失败，${err}`);
           });
@@ -500,28 +580,22 @@ async function multiUsersSignIn() {
     $.logger.info(`当前共 ${allSessionNames.length} 个Cookies需要进行签到/任务。`);
     for (let [index, session] of allSessionNames.entries()) {
       $.logger.info(`当前正在进行第 ${index + 1} 个Cookie签到`);
-      // 通知信息
       let title = "";
       let subTitle = "";
       let content = "";
 
-      // 获取Cookies
       currentCookie = $.data.read(smzdmCookieKey, "", session);
 
-      // 查询签到前用户数据
       const beforeUserInfo = await getWebUserInfo();
 
-      // 每日签到
       if ($.data.read(smzdmSigninKey, true) === true) {
-        // Android端签到
         await $.utils
-          .retry(androidSignin, 5, 1000)(beforeUserInfo["nick_name"])
+          .retry(androidSignin, 5, 1000)()
           .catch((err) => {
             subTitle = `Android端签到异常: ${err}`;
           });
       }
 
-      // 日常任务
       if ($.data.read(smzdmMissionKey, true) === true) {
         const success = await favArticles();
         const msg = `每日收藏文章任务 ${success}/${clickFavArticleMaxTimes}`;
@@ -529,31 +603,30 @@ async function multiUsersSignIn() {
         $.logger.info(msg);
       }
 
-      // 抽奖
-      if ($.data.read(smzdmLotteryKey, true) === true) {
+      if ($$.data.read(smzdmLotteryKey, true) === true) {
         const msg = await lotteryDraw();
         content += !!content ? "\n" : "";
         content += msg;
         $.logger.info(msg);
       }
 
-      // 休眠
       await $.utils.sleep(3000);
 
-      // 获取签到后的用户信息
       const afterUserInfo = await getWebUserInfo();
 
       title = `${scriptName} - ${afterUserInfo.nick_name} V${afterUserInfo.vip}`;
 
-      // 检查是否黑号
-      if ($.data.read(smzdmCheckBlackRoom, false) === true && (afterUserInfo.blackroom_desc)) {
-          $.notification.post(
-            title, "",
-            `⚠️账户已在小黑屋中，请谨慎使用脚本！\n小黑屋描述:${afterUserInfo.blackroom_desc}`
-          );
+      if (
+        $.data.read(smzdmCheckBlackRoom, false) === true &&
+        afterUserInfo.blackroom_desc
+      ) {
+        $.notification.post(
+          title,
+          "",
+          `⚠️账户已在小黑屋中，请谨慎使用脚本！\n小黑屋描述:${afterUserInfo.blackroom_desc}`
+        );
       }
 
-      // 重复签到
       if (
         afterUserInfo.has_checkin === true &&
         beforeUserInfo.has_checkin === true
@@ -563,11 +636,9 @@ async function multiUsersSignIn() {
         subTitle = `已连续签到${afterUserInfo.daily_checkin_num}天`;
       }
 
-      // 记录日志
       let msg = `昵称：${beforeUserInfo.nick_name}\n签到状态：${afterUserInfo.has_checkin}\n签到后等级${afterUserInfo.vip}，积分${afterUserInfo.point}，经验${afterUserInfo.exp}，金币${afterUserInfo.gold}，碎银子${afterUserInfo.silver}，未读消息${afterUserInfo.unread_msg}`;
       $.logger.info(msg);
 
-      // 通知
       if (beforeUserInfo.exp && afterUserInfo.exp) {
         let addPoint = afterUserInfo.point - beforeUserInfo.point;
         let addExp = afterUserInfo.exp - beforeUserInfo.exp;
@@ -601,10 +672,7 @@ async function multiUsersSignIn() {
 }
 
 (async () => {
-  if (
-    $.isRequest &&
-    AppGetCookieRegex.test($.request.url)
-  ) {
+  if ($.isRequest && AppGetCookieRegex.test($.request.url)) {
     await getWebOrAppCookie();
   } else {
     await multiUsersSignIn();
