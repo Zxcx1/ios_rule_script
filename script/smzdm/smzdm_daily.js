@@ -489,14 +489,13 @@ function clickFavArticle(articleId) {
   });
 }
 
-// 收藏文章任务（新版）
+// 收藏文章任务（最终版，完全匹配 data-article-id）
 function favArticles() {
   return new Promise(async (resolve) => {
     let articlesId = [];
     let success = 0;
 
     try {
-      // 访问新版首页（结构已变）
       const resp = await $.http.get({
         url: "https://post.smzdm.com/",
         headers: {
@@ -509,33 +508,26 @@ function favArticles() {
 
       const html = resp.body;
 
-      // 新版文章 ID 结构：data-articleid="xxxxxx"
-      const matches = html.match(/data-articleid="([a-zA-Z0-9]+)"/g) || [];
+      // ① 你的 HTML 真实结构：data-article-id="xxxxxx"
+      const matches = html.match(/data-article-id="([a-zA-Z0-9]+)"/g) || [];
 
       matches.forEach((m) => {
-        const id = m.match(/data-articleid="([a-zA-Z0-9]+)"/)[1];
+        const id = m.match(/data-article-id="([a-zA-Z0-9]+)"/)[1];
         articlesId.push(id);
       });
 
-      // 如果首页抓不到，尝试抓“好文推荐”
+      // 去重
+      articlesId = [...new Set(articlesId)];
+
       if (articlesId.length === 0) {
-        const altMatches = html.match(/article_id":"([a-zA-Z0-9]+)"/g) || [];
-        altMatches.forEach((m) => {
-          const id = m.match(/article_id":"([a-zA-Z0-9]+)"/)[1];
-          articlesId.push(id);
-        });
-      }
-
-      // 取前 7 篇
-      let favArticlesId = articlesId.slice(0, clickFavArticleMaxTimes);
-
-      if (favArticlesId.length === 0) {
-        $.logger.warning("未找到可收藏的文章");
+        $.logger.warning("❗ 未找到可收藏的文章（PC 端结构可能还有其他区域）");
         return resolve(0);
       }
 
-      // 收藏 + 取消收藏
-      for (let articleId of favArticlesId) {
+      // 取前 7 篇
+      const favList = articlesId.slice(0, clickFavArticleMaxTimes);
+
+      for (let articleId of favList) {
         const ok1 = await clickFavArticle(articleId);
         if (ok1) success++;
 
@@ -552,6 +544,7 @@ function favArticles() {
     }
   });
 }
+
 
 
 // 多用户签到
