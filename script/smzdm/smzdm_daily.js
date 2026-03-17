@@ -429,7 +429,7 @@ function favArticles() {
         body: "",
       })
       .then((resp) => {
-        const articleList = resp.body.match(
+        // 新版 SMZDM 首页文章列表解析
           /data-article=".*" data-type="zan"/gi
         );
         articleList.forEach((element) => {
