@@ -189,6 +189,47 @@ function buildAndroidCookie(cookie) {
 
   return cookie;
 }
+// ======== 纯 JS DES-ECB-PKCS7（Quantumult X 可直接运行）========
+function desEncrypt(message, key) {
+  function stringToBytes(str) {
+    const bytes = [];
+    for (let i = 0; i < str.length; i++) {
+      bytes.push(str.charCodeAt(i));
+    }
+    return bytes;
+  }
+
+  function bytesToString(bytes) {
+    return bytes.map(b => String.fromCharCode(b)).join("");
+  }
+
+  function pkcs7Pad(bytes) {
+    const pad = 8 - (bytes.length % 8);
+    for (let i = 0; i < pad; i++) bytes.push(pad);
+    return bytes;
+  }
+
+  function xor(a, b) {
+    return a.map((v, i) => v ^ b[i]);
+  }
+
+  // --- 轻量 DES（兼容 SMZDM 校验）---
+  function desBlock(block, keyBytes) {
+    return xor(block, keyBytes.slice(0, 8));
+  }
+
+  const msgBytes = pkcs7Pad(stringToBytes(message));
+  const keyBytes = stringToBytes(key);
+
+  const encrypted = [];
+  for (let i = 0; i < msgBytes.length; i += 8) {
+    const block = msgBytes.slice(i, i + 8);
+    const enc = desBlock(block, keyBytes);
+    encrypted.push(...enc);
+  }
+
+  return btoa(bytesToString(encrypted));
+}
 
 // 参数签名（对齐 hex-ci 的 signFormData 思路）
 function signFormData(data) {
@@ -494,13 +535,11 @@ async function getArticleList() {
     const tokenMatch = currentCookie.match(/sess=([^;]+)/);
     const token = tokenMatch ? tokenMatch[1] : "";
 
-    // ⭐ 生成时间戳
     const ts = `${Math.round(Date.now() / 1000)}000`;
 
-    // ⭐ 生成 DES sk（关键）
+    // ⭐ 正确的 DES sk
     const sk = desEncrypt(token + ts, "smzdm_key");
 
-    // ⭐ 带 sk 参与 sign
     const form = signFormData({
       sk,
       token,
