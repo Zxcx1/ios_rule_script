@@ -429,7 +429,14 @@ function favArticles() {
         body: "",
       })
       .then((resp) => {
-        // 新版 SMZDM 首页文章列表解析
+// 新版 SMZDM 首页文章列表解析
+const matches = resp.body.match(/https:\/\/post\.smzdm\.com\/p\/([a-zA-Z0-9]+)\//g) || [];
+matches.forEach(url => {
+  const idMatch = url.match(/p\/([a-zA-Z0-9]+)\//);
+  if (idMatch) {
+    articlesId.push(idMatch[1]);
+  }
+});
           /data-article=".*" data-type="zan"/gi
         );
         articleList.forEach((element) => {
