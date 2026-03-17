@@ -288,17 +288,15 @@ await $.http
     const silverMatch = html.match(/assets-prestige[\s\S]*?assets-num[^>]*>(\d+)</);
     userInfo.silver = silverMatch ? Number(silverMatch[1]) : 0;
 
-    // 积分（你页面里被注释掉了，所以可能解析不到）
-    const pointMatch = html.match(/assets-points[\s\S]*?assets-num[^>]*>(\d+)</);
-    userInfo.point = pointMatch ? Number(pointMatch[1]) : 0;
+    // 积分（你页面里没有）
+    userInfo.point = 0;
 
-    // 经验变动列表（你的 HTML 里没有这一块，所以设为空）
+    // 经验变动列表（你页面里没有）
     userInfo.user_point_list = [];
   })
   .catch((err) => {
     $.logger.error(`获取新版用户信息出现异常，${err}`);
   });
-
     // 返回结果
     resolve(userInfo);
   });
