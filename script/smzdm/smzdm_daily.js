@@ -599,7 +599,7 @@ async function multiUsersSignIn() {
         $.logger.info(msg);
       }
 
-      if ($$.data.read(smzdmLotteryKey, true) === true) {
+      if ($.data.read(smzdmLotteryKey, true) === true) {
         const msg = await lotteryDraw();
         content += !!content ? "\n" : "";
         content += msg;
