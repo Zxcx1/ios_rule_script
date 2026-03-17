@@ -442,9 +442,9 @@ function lotteryDraw() {
   });
 }
 
-// 收藏文章
+// 收藏文章（新版）
 function clickFavArticle(articleId) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     $.http
       .post({
         url: "https://zhiyou.smzdm.com/user/favorites/ajax_favorite",
@@ -458,7 +458,7 @@ function clickFavArticle(articleId) {
           "User-Agent":
             "smzdm 10.4.20 rv:134.2 (iPhone 11; iOS 15.5; zh_CN)/iphone_smzdmapp/10.4.20",
         },
-        body: `article_id=${articleId}&channel_id=11&client_type=PC&event_key=%E6%94%B6%E8%97%8F&otype=%E6%94%B6%E8%97%8F&aid=${articleId}&cid=11&p=2&source=%E6%97%A0&atp=76&tagID=%E6%97%A0&sourcePage=https%3A%2F%2Fpost.smzdm.com%2F&sourceMode=%E6%97%A0`,
+        body: `article_id=${articleId}&channel_id=11&client_type=PC&event_key=%E6%94%B6%E8%97%8F&otype=%E6%94%B6%E8%97%8F`,
       })
       .then((resp) => {
         let obj = resp.body;
@@ -466,85 +466,93 @@ function clickFavArticle(articleId) {
           try {
             obj = JSON.parse(obj);
           } catch (e) {
-            $.logger.error(`收藏接口返回非 JSON，可能被风控：${obj}`);
+            $.logger.error(`收藏接口返回非 JSON：${obj}`);
             return resolve(false);
           }
         }
 
-        if (obj["error_code"] === 0) {
-          $.logger.info(`好文${articleId}收藏成功`);
+        if (obj.error_code === 0 || obj.error_code === "0") {
+          $.logger.info(`好文 ${articleId} 收藏成功`);
           resolve(true);
-        } else if (obj["error_code"] === 2) {
-          $.logger.info(`好文${articleId}取消收藏成功`);
+        } else if (obj.error_code === 2) {
+          $.logger.info(`好文 ${articleId} 取消收藏成功`);
           resolve(true);
         } else {
-          $.logger.error(`好文${articleId}收藏失败，${JSON.stringify(obj)}`);
+          $.logger.error(`好文 ${articleId} 收藏失败：${JSON.stringify(obj)}`);
           resolve(false);
         }
       })
       .catch((err) => {
-        $.logger.error(`文章加入/取消收藏失败，${err}`);
-        reject(false);
+        $.logger.error(`文章收藏失败：${err}`);
+        resolve(false);
       });
   });
 }
 
-// 收藏文章任务
+// 收藏文章任务（新版）
 function favArticles() {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve) => {
     let articlesId = [];
     let success = 0;
-    await $.http
-      .get({
+
+    try {
+      // 访问新版首页（结构已变）
+      const resp = await $.http.get({
         url: "https://post.smzdm.com/",
         headers: {
           Accept:
-            "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-          "Accept-Language":
-            "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
-          Host: "post.smzdm.com",
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
           "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36 Edg/85.0.564.41",
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 14_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
         },
-        body: "",
-      })
-      .then((resp) => {
-        const matches =
-          resp.body.match(/data-article-id="([a-zA-Z0-9]+)"/g) || [];
-        matches.forEach((m) => {
-          const id = m.match(/data-article-id="([a-zA-Z0-9]+)"/)[1];
+      });
+
+      const html = resp.body;
+
+      // 新版文章 ID 结构：data-articleid="xxxxxx"
+      const matches = html.match(/data-articleid="([a-zA-Z0-9]+)"/g) || [];
+
+      matches.forEach((m) => {
+        const id = m.match(/data-articleid="([a-zA-Z0-9]+)"/)[1];
+        articlesId.push(id);
+      });
+
+      // 如果首页抓不到，尝试抓“好文推荐”
+      if (articlesId.length === 0) {
+        const altMatches = html.match(/article_id":"([a-zA-Z0-9]+)"/g) || [];
+        altMatches.forEach((m) => {
+          const id = m.match(/article_id":"([a-zA-Z0-9]+)"/)[1];
           articlesId.push(id);
         });
-      })
-      .catch((err) => {
-        $.logger.error(`获取待收藏的文章列表失败，${err}`);
-        reject(err);
-      });
-    let favArticlesId = articlesId.splice(0, clickFavArticleMaxTimes);
-    if (favArticlesId.length > 0) {
-      for (let articleId of favArticlesId) {
-        await $.utils
-          .retry(clickFavArticle, 3, 500)(articleId)
-          .then((result) => {
-            if (result === true) {
-              success += 1;
-            }
-          })
-          .catch((err) => {
-            $.logger.error(`文章加入收藏失败，${err}`);
-          });
-        await $.utils.sleep(1000);
-        await $.utils
-          .retry(clickFavArticle, 3, 500)(articleId)
-          .catch((err) => {
-            $.logger.error(`文章取消收藏失败，${err}`);
-          });
-        await $.utils.sleep(1000);
       }
+
+      // 取前 7 篇
+      let favArticlesId = articlesId.slice(0, clickFavArticleMaxTimes);
+
+      if (favArticlesId.length === 0) {
+        $.logger.warning("未找到可收藏的文章");
+        return resolve(0);
+      }
+
+      // 收藏 + 取消收藏
+      for (let articleId of favArticlesId) {
+        const ok1 = await clickFavArticle(articleId);
+        if (ok1) success++;
+
+        await $.utils.sleep(800);
+
+        await clickFavArticle(articleId);
+        await $.utils.sleep(800);
+      }
+
+      resolve(success);
+    } catch (err) {
+      $.logger.error(`收藏任务执行异常：${err}`);
+      resolve(success);
     }
-    resolve(success);
   });
 }
+
 
 // 多用户签到
 async function multiUsersSignIn() {
