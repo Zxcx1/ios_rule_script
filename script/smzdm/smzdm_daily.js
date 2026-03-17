@@ -488,71 +488,76 @@ function clickFavArticle(articleId) {
       });
   });
 }
+// 获取文章列表（带 sign）
+async function getArticleList() {
+  const tokenMatch = currentCookie.match(/sess=([^;]+)/);
+  const token = tokenMatch ? tokenMatch[1] : "";
+  const sk = "1";
 
-// 收藏文章任务（最终稳定版：使用正确的移动端 API）
-function favArticles() {
-  return new Promise(async (resolve) => {
-    let success = 0;
-
-    try {
-      const resp = await $.http.get({
-        url: "https://article-api.smzdm.com/v1/article/recommend?page=1&limit=20",
-        headers: {
-          "User-Agent":
-            "smzdm_android_V10.4.26 rv:866 (Redmi Note 3;Android10.0;zh)smzdmapp",
-          Accept: "application/json",
-        },
-      });
-
-      // 打印原始返回
-      $.logger.error("收藏任务 API 原始返回：" + JSON.stringify(resp.body));
-
-      let obj = resp.body;
-
-      if (typeof obj === "string") {
-        obj = JSON.parse(obj);
-      }
-
-      const rows = obj?.data?.rows || [];
-
-      if (rows.length === 0) {
-        $.logger.warning("❗ 未找到可收藏的文章（API 返回为空）");
-        return resolve(0);
-      }
-
-      // 取前 7 篇文章
-      const favList = rows.slice(0, clickFavArticleMaxTimes);
-
-      for (let item of favList) {
-        const articleId = item.article_id;
-        if (!articleId) continue;
-
-        const ok1 = await clickFavArticle(articleId);
-        if (ok1) success++;
-
-        await $.utils.sleep(800);
-
-        await clickFavArticle(articleId);
-        await $.utils.sleep(800);
-      }
-
-      resolve(success);
-
-    } catch (err) {
-
-      $.logger.error("收藏任务异常：" + err);
-
-      if (err?.response?.body) {
-        $.logger.error(
-          "收藏任务 API 返回内容（来自 catch）：" +
-            JSON.stringify(err.response.body)
-        );
-      }
-
-      resolve(0);
-    }
+  const form = signFormData({
+    sk,
+    token,
+    page: 1,
+    limit: 20,
   });
+
+  const query = Object.keys(form)
+    .map((k) => `${k}=${encodeURIComponent(form[k])}`)
+    .join("&");
+
+  const resp = await $.http.get({
+    url: `https://article-api.smzdm.com/v1/article/recommend?${query}`,
+    headers: {
+      "User-Agent":
+        "smzdm_android_V10.4.26 rv:866 (Redmi Note 3;Android10.0;zh)smzdmapp",
+      Accept: "application/json",
+    },
+  });
+
+  return resp.body;
 }
+
+// 收藏文章任务（最终稳定版：使用带 sign 的移动端 API）
+async function favArticles() {
+  let success = 0;
+
+  try {
+    // ⭐ 使用带签名的文章列表接口
+    const raw = await getArticleList();
+    $.logger.error("收藏任务 API 原始返回：" + JSON.stringify(raw));
+
+    let obj = raw;
+    if (typeof obj === "string") obj = JSON.parse(obj);
+
+    const rows = obj?.data?.rows || [];
+
+    if (rows.length === 0) {
+      $.logger.warning("❗ 未找到可收藏的文章（API 返回为空）");
+      return 0;
+    }
+
+    const favList = rows.slice(0, clickFavArticleMaxTimes);
+
+    for (let item of favList) {
+      const articleId = item.article_id;
+      if (!articleId) continue;
+
+      const ok1 = await clickFavArticle(articleId);
+      if (ok1) success++;
+
+      await $.utils.sleep(800);
+      await clickFavArticle(articleId);
+      await $.utils.sleep(800);
+    }
+
+    return success;
+
+  } catch (err) {
+    $.logger.error("收藏任务异常：" + err);
+    return 0;
+  }
+}
+
 
 // 多用户签到
 async function multiUsersSignIn() {
