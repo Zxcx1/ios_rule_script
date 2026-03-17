@@ -506,7 +506,16 @@ function favArticles() {
       });
 
       let obj = resp.body;
-      if (typeof obj === "string") obj = JSON.parse(obj);
+$.logger.error("收藏任务 API 返回内容：" + obj);   // ← 加这一行
+
+if (typeof obj === "string") {
+  try {
+    obj = JSON.parse(obj);
+  } catch (e) {
+    $.logger.error("收藏任务 JSON 解析失败：" + e);
+    return resolve(0);
+  }
+}
 
       const rows = obj?.data?.rows || [];
 
