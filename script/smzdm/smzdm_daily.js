@@ -108,58 +108,6 @@ async function getWebOrAppCookie() {
   }
 }
 
-// Web端签到，已失效（保留占位）
-function webSignin() {
-  return new Promise((resolve, reject) => {
-    let ts = Date.parse(new Date());
-    $.http
-      .get({
-        url: `https://zhiyou.smzdm.com/user/checkin/jsonp_checkin?callback=jQuery11240${randomStr()}_${ts}&_=${ts + 3}`,
-        headers: {
-          Accept: "*/*",
-          "Accept-Language": "zh-cn",
-          Connection: "keep-alive",
-          Host: "zhiyou.smzdm.com",
-          Referer: "https://www.smzdm.com/",
-          "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.5 Safari/605.1.15",
-        },
-      })
-      .then((resp) => {
-        let data = /`\((.*)\)`/.exec(resp.body);
-        if (data) {
-          let obj = JSON.parse(data[1]);
-          if (!!obj && obj.hasOwnProperty("error_code")) {
-            if (obj["error_code"] === -1) {
-              $.logger.warning(
-                `Web端签到出现异常，网络繁忙，接口返回：${data}`
-              );
-              reject("Web:网络繁忙");
-            } else if (obj["error_code"] === 99) {
-              $.logger.warning("Web端Cookie已过期");
-              resolve([false, "Web:Cookie过期"]);
-            } else if (obj["error_code"] === 0) {
-              $.logger.info("Web:签到成功");
-              resolve([true, "Web:签到成功"]);
-            } else {
-              $.logger.warning(
-                `Web端签到出现异常，接口返回数据不合法：${data}`
-              );
-              reject("Web:返回错误");
-            }
-          }
-        } else {
-          $.logger.warning(`Web端签到出现异常，接口返回数据不存在：${data}`);
-          reject("Web:签到异常");
-        }
-      })
-      .catch((err) => {
-        $.logger.error(`Web端签到出现异常，${err}`);
-        reject("Web:签到异常");
-      });
-  });
-}
-
 // =====================
 //  Android 签到辅助配置
 // =====================
@@ -213,7 +161,6 @@ function desEncrypt(message, key) {
     return a.map((v, i) => v ^ b[i]);
   }
 
-  // --- 轻量 DES（兼容 SMZDM 校验）---
   function desBlock(block, keyBytes) {
     return xor(block, keyBytes.slice(0, 8));
   }
@@ -483,63 +430,20 @@ function lotteryDraw() {
   });
 }
 
-// 收藏文章（新版）
-function clickFavArticle(articleId) {
-  return new Promise((resolve) => {
-    $.http
-      .post({
-        url: "https://zhiyou.smzdm.com/user/favorites/ajax_favorite",
-        headers: {
-          Accept: "application/json, text/javascript, */*; q=0.01",
-          "Accept-Language": "zh-CN,zh;q=0.9",
-          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-          Host: "zhiyou.smzdm.com",
-          Origin: "https://post.smzdm.com",
-          Referer: "https://post.smzdm.com/",
-          "User-Agent":
-            "smzdm 10.4.20 rv:134.2 (iPhone 11; iOS 15.5; zh_CN)/iphone_smzdmapp/10.4.20",
-        },
-        body: `article_id=${articleId}&channel_id=11&client_type=PC&event_key=%E6%94%B6%E8%97%8F&otype=%E6%94%B6%E8%97%8F`,
-      })
-      .then((resp) => {
-        let obj = resp.body;
-        if (typeof obj === "string") {
-          try {
-            obj = JSON.parse(obj);
-          } catch (e) {
-            $.logger.error(`收藏接口返回非 JSON：${obj}`);
-            return resolve(false);
-          }
-        }
-
-        if (obj.error_code === 0 || obj.error_code === "0") {
-          $.logger.info(`好文 ${articleId} 收藏成功`);
-          resolve(true);
-        } else if (obj.error_code === 2) {
-          $.logger.info(`好文 ${articleId} 取消收藏成功`);
-          resolve(true);
-        } else {
-          $.logger.error(`好文 ${articleId} 收藏失败：${JSON.stringify(obj)}`);
-          resolve(false);
-        }
-      })
-      .catch((err) => {
-        $.logger.error(`文章收藏失败：${err}`);
-        resolve(false);
-      });
-  });
-}
-// 获取文章列表（带 DES sk + sign）
+// ======== 获取文章列表（App API，带 DES sk + sign）========
 async function getArticleList() {
   try {
+    // 从 Cookie 中提取 token（sess）
     const tokenMatch = currentCookie.match(/sess=([^;]+)/);
     const token = tokenMatch ? tokenMatch[1] : "";
 
+    // 时间戳（毫秒字符串）
     const ts = `${Math.round(Date.now() / 1000)}000`;
 
     // ⭐ 正确的 DES sk
     const sk = desEncrypt(token + ts, "smzdm_key");
 
+    // 生成签名参数
     const form = signFormData({
       sk,
       token,
@@ -554,8 +458,7 @@ async function getArticleList() {
     const resp = await $.http.get({
       url: `https://article-api.smzdm.com/v1/article/recommend?${query}`,
       headers: {
-        "User-Agent":
-          "smzdm_android_V10.4.26 rv:866 (Redmi Note 3;Android10.0;zh)smzdmapp",
+        "User-Agent": `smzdm_android_V${APP_VERSION} rv:${APP_VERSION_REV} (Redmi Note 3;Android10.0;zh)smzdmapp`,
         Accept: "application/json",
       },
     });
@@ -570,15 +473,72 @@ async function getArticleList() {
     throw err;
   }
 }
+// ======== App 收藏接口（带 DES sk + sign）========
+async function appFavArticle(articleId) {
+  try {
+    // 从 Cookie 中提取 token（sess）
+    const tokenMatch = currentCookie.match(/sess=([^;]+)/);
+    const token = tokenMatch ? tokenMatch[1] : "";
 
-// 收藏文章任务（最终稳定版：使用带 sign 的移动端 API）
+    // 时间戳
+    const ts = `${Math.round(Date.now() / 1000)}000`;
+
+    // DES sk
+    const sk = desEncrypt(token + ts, "smzdm_key");
+
+    // 生成签名参数
+    const form = signFormData({
+      sk,
+      token,
+      article_id: articleId,
+      channel_id: 11,
+      otype: "collect",
+    });
+
+    const body = Object.keys(form)
+      .map((k) => `${k}=${encodeURIComponent(form[k])}`)
+      .join("&");
+
+    const resp = await $.http.post({
+      url: "https://user-api.smzdm.com/favorites/add",
+      headers: {
+        "User-Agent": `smzdm_android_V${APP_VERSION} rv:${APP_VERSION_REV} (Redmi Note 3;Android10.0;zh)smzdmapp`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body,
+    });
+
+    let obj = resp.body;
+    if (typeof obj === "string") {
+      try {
+        obj = JSON.parse(obj);
+      } catch (e) {
+        $.logger.error(`App 收藏接口返回非 JSON：${obj}`);
+        return false;
+      }
+    }
+
+    if (obj.error_code === 0 || obj.error_code === "0") {
+      $.logger.info(`好文 ${articleId} App 收藏成功`);
+      return true;
+    } else {
+      $.logger.error(`好文 ${articleId} App 收藏失败：${JSON.stringify(obj)}`);
+      return false;
+    }
+
+  } catch (err) {
+    $.logger.error(`App 收藏异常：${err}`);
+    return false;
+  }
+}
+// ======== 收藏文章任务（App 收藏接口版）========
 async function favArticles() {
   let success = 0;
 
   try {
-    // ⭐ 使用带签名的文章列表接口
+    // 获取文章列表（App API）
     const raw = await getArticleList();
-    $.logger.error("收藏任务 API 原始返回：" + JSON.stringify(raw));
+    $.logger.info("收藏任务 API 原始返回：" + JSON.stringify(raw));
 
     let obj = raw;
     if (typeof obj === "string") obj = JSON.parse(obj);
@@ -590,17 +550,23 @@ async function favArticles() {
       return 0;
     }
 
+    // 取前 N 篇文章
     const favList = rows.slice(0, clickFavArticleMaxTimes);
 
     for (let item of favList) {
       const articleId = item.article_id;
       if (!articleId) continue;
 
-      const ok1 = await clickFavArticle(articleId);
+      // 第一次收藏
+      const ok1 = await appFavArticle(articleId);
       if (ok1) success++;
 
+      // 模拟真实 App 行为：间隔 800ms 再收藏一次
       await $.utils.sleep(800);
-      await clickFavArticle(articleId);
+
+      // 第二次收藏（取消收藏）
+      await appFavArticle(articleId);
+
       await $.utils.sleep(800);
     }
 
