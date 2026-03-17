@@ -544,7 +544,15 @@ function favArticles() {
 
       if (err?.response?.body) {
         $.logger.error(
-          "收藏任务 API
+          "收藏任务 API 返回内容（来自 catch）：" +
+            JSON.stringify(err.response.body)
+        );
+      }
+
+      resolve(0);
+    }
+  });
+}
 
 // 多用户签到
 async function multiUsersSignIn() {
