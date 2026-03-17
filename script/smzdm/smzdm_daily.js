@@ -275,14 +275,14 @@ function androidSignin() {
         }
       }
 
-      if (obj.error_code === 0) {
-        const msg = obj.error_msg || "ok";
-        $.logger.info("Android签到成功：" + msg);
-        resolve([true, msg]);
-      } else {
-        $.logger.warning("Android签到失败：" + JSON.stringify(obj));
-        resolve([false, obj.error_msg || "签到失败"]);
-      }
+     if (obj.error_code === "0" || obj.error_code === 0) {
+  const msg = obj.error_msg || "ok";
+  $.logger.info("Android签到成功：" + msg);
+  resolve([true, msg]);
+} else {
+  $.logger.warning("Android签到失败：" + JSON.stringify(obj));
+  resolve([false, obj.error_msg || "签到失败"]);
+}
     } catch (e) {
       $.logger.error("Android签到异常：" + e);
       resolve([false, "签到异常"]);
