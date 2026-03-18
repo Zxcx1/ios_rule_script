@@ -1,76 +1,19 @@
 /*
-吾爱破解签到脚本
-
-更新时间: 2022.6.18
-脚本兼容: QuantumultX, Surge, Loon, Node.js
-电报频道: @NobyDa
-问题反馈: @NobyDa_bot
-
-************************
-QX, Surge, Loon说明：
-************************
-手动登录 https://www.52pojie.cn/home.php 如通知成功获取cookie, 则可以使用此签到脚本.
-获取Cookie后, 请将Cookie脚本禁用并移除主机名, 以免产生不必要的MITM.
-脚本将在每天上午9点执行, 您可以修改执行时间.
-
-************************
-Node.js说明: 
-************************
-需自行安装"got"与"iconv-lite"模块. 例: npm install got iconv-lite -g
-
-抓取Cookie说明:
-浏览器打开 https://www.52pojie.cn/home.php 登录账号后, 开启抓包软件并刷新页面.
-抓取该URL请求头下的Cookie字段, 填入以下CookieWA的单引号内即可. */
-
-const CookieWA = '';
-
-//Bark APP 通知推送Key
-const barkKey = '';
-
-/***********************
-Surge 4.2.0+ 脚本配置:
-************************
-
-[Script]
-吾爱签到 = type=cron,cronexp=0 9 * * *,script-path=https://raw.githubusercontent.com/NobyDa/Script/master/52pojie-DailyBonus/52pojie.js
-
-吾爱获取Cookie = type=http-request,pattern=https:\/\/www\.52pojie\.cn\/home\.php\?,script-path=https://raw.githubusercontent.com/NobyDa/Script/master/52pojie-DailyBonus/52pojie.js
-
-[MITM] 
-hostname= www.52pojie.cn
-
-************************
-QuantumultX 远程脚本配置:
-************************
-
-[task_local]
-# 吾爱签到
-0 9 * * * https://raw.githubusercontent.com/NobyDa/Script/master/52pojie-DailyBonus/52pojie.js
-
-[rewrite_local]
-# 获取Cookie
-https:\/\/www\.52pojie\.cn\/home\.php\? url script-request-header https://raw.githubusercontent.com/NobyDa/Script/master/52pojie-DailyBonus/52pojie.js
-
-[mitm] 
-hostname= www.52pojie.cn
-
-************************
-Loon 2.1.0+ 脚本配置:
-************************
-
-[Script]
-# 吾爱签到
-cron "0 9 * * *" script-path=https://raw.githubusercontent.com/NobyDa/Script/master/52pojie-DailyBonus/52pojie.js
-
-# 获取Cookie
-http-request https:\/\/www\.52pojie\.cn\/home\.php\? script-path=https://raw.githubusercontent.com/NobyDa/Script/master/52pojie-DailyBonus/52pojie.js
-
-[Mitm] 
-hostname= www.52pojie.cn
+吾爱破解签到脚本（修复版）
+修复内容：
+- 修复“脚本待更新”误判
+- 适配新版吾爱破解签到页面
 */
 
 const $ = API('nobyda_52pojie');
 const date = new Date();
+
+// 你的 Cookie（如果用 QX 自动抓取，可留空）
+const CookieWA = '';
+
+// Bark 推送（可留空）
+const barkKey = '';
+
 const reqData = {
   url: 'https://www.52pojie.cn/home.php?mod=task&do=apply&id=2',
   headers: {
@@ -78,54 +21,76 @@ const reqData = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:101.0) Gecko/20100101 Firefox/101.0",
   }
 };
+
 if ($.env.isRequest) {
-  GetCookie()
+  GetCookie();
 } else if (!reqData.headers.Cookie) {
   $.notify('吾爱破解', ``, `未填写/未获取Cookie!`);
+  $.done();
 } else if (!reqData.headers.Cookie.includes('_auth=')) {
   $.notify('吾爱破解', ``, `Cookie关键授权字段缺失, 需重新获取!`);
+  $.done();
 } else {
-  $.http.put(reqData)
+  $.http.get(reqData)
     .then((resp) => {
-      if (resp.body.match(/(ÒÑÍê³É|\u606d\u559c\u60a8|��̳΢�š��ᰮ�ƽ�)/)) {
-        $.msgBody = date.getMonth() + 1 + "月" + date.getDate() + "日, 签到成功 🎉"
-      } else if (resp.body.match(/(ÄúÒÑ|\u4e0b\u671f\u518d\u6765|>��Ǹ������)/)) {
-        $.msgBody = date.getMonth() + 1 + "月" + date.getDate() + "日, 已签过 ⚠️"
-      } else if (resp.body.match(/(ÏÈµÇÂ¼|\u9700\u8981\u5148\u767b\u5f55|�Ҫ�ȵ�¼���ܼ�)/)) {
-        $.msgBody = "签到失败, Cookie失效 ‼️‼️"
-      } else if (resp.statusCode == 403) {
-        $.msgBody = "服务器暂停签到 ⚠️"
-      } else {
-        $.msgBody = "脚本待更新 ‼️‼️"
+      const body = resp.body || "";
+
+      // ========== 新版判断逻辑 ==========
+      if (body.includes("任务已完成") || body.includes("恭喜您完成任务")) {
+        $.msgBody = `${date.getMonth() + 1}月${date.getDate()}日, 签到成功 🎉`;
+      }
+      else if (body.includes("您已申请") || body.includes("下期再来")) {
+        $.msgBody = `${date.getMonth() + 1}月${date.getDate()}日, 已签过 ⚠️`;
+      }
+      else if (body.includes("请先登录") || body.includes("需要先登录")) {
+        $.msgBody = "签到失败, Cookie失效 ‼️‼️";
+      }
+      else if (resp.statusCode == 403) {
+        $.msgBody = "服务器暂停签到 ⚠️";
+      }
+      else {
+        $.msgBody = "签到状态未知（可能页面更新）";
       }
     })
-    .catch((err) => ($.msgBody = `签到失败 ‼️‼️\n${err || err.message}`))
+    .catch((err) => {
+      $.msgBody = `签到失败 ‼️‼️\n${err || err.message}`;
+    })
     .finally(async () => {
       if (barkKey) {
         await BarkNotify($, barkKey, '吾爱破解', $.msgBody);
       }
       $.notify('吾爱破解', ``, $.msgBody);
       $.done();
-    })
+    });
 }
 
+// ========== Cookie 获取 ==========
 function GetCookie() {
-  const TM = $.read("TIME");
   const CK = $request.headers['Cookie'] || $request.headers['cookie'];
   if (CK && CK.includes('_auth=')) {
     $.write(CK, "COOKIE");
-    if (!TM || TM && (Date.now() - TM) / 1000 >= 21600) {
-      $.notify("吾爱破解", "", `写入Cookie成功 🎉`);
-      $.write(JSON.stringify(Date.now()), "TIME");
-    } else {
-      $.info(`吾爱破解\n写入Cookie成功 🎉`)
-    }
+    $.notify("吾爱破解", "", `写入Cookie成功 🎉`);
   } else {
-    $.info(`吾爱破解\n写入Cookie失败, 关键值缺失`)
+    $.notify("吾爱破解", "", `写入Cookie失败, 缺少关键字段`);
   }
-  $.done()
+  $.done();
 }
 
+// ========== Bark 推送 ==========
+async function BarkNotify(c, k, t, b) {
+  return new Promise((resolve) => {
+    c.post({
+      url: 'https://api.day.app/push',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: t,
+        body: b,
+        device_key: k,
+        ext_params: { group: t }
+      })
+    }, (e, r, d) => resolve());
+  });
+}
 //Bark APP notify
 async function BarkNotify(c, k, t, b) { for (let i = 0; i < 3; i++) { console.log(`🔷Bark notify >> Start push (${i + 1})`); const s = await new Promise((n) => { c.post({ url: 'https://api.day.app/push', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: t, body: b, device_key: k, ext_params: { group: t } }) }, (e, r, d) => r && r.status == 200 ? n(1) : n(d || e)) }); if (s === 1) { console.log('✅Push success!'); break } else { console.log(`❌Push failed! >> ${s.message || s}`) } } };
 
