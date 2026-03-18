@@ -80,8 +80,8 @@ magicJS.post(options, (err, resp, data) => {
 
     // JSONP 去壳（正确版本）
     if (text.startsWith("?(")) {
-      text = text.replace(/^\?`\(/, "").replace(/\)`;?$/, "");
-    }
+  text = text.replace(/^\?`\(/, "").replace(/\)`;?$/, "");
+}
 
     const obj = JSON.parse(text);
 
