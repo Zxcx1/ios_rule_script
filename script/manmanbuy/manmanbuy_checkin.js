@@ -87,9 +87,11 @@ function doSign(retry = 2) {
       let text = data.trim();
 
       // JSONP 去壳
-      if (text.startsWith("?(")) {
-        text = text.replace(/^\?`\(/, "").replace(/\)`;?$/, "");
-      }
+      // JSONP 去壳（不会被 QX 吞字符）
+if (text.startsWith("?(")) {
+  text = text.replace(new RegExp("^\\?\`\("), "")
+             .replace(new RegExp("\\)`;?$"), "");
+}
 
       const obj = JSON.parse(text);
 
