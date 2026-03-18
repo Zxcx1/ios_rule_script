@@ -79,9 +79,12 @@ magicJS.post(options, (err, resp, data) => {
     let text = data.trim();
 
     // JSONP 去壳（正确版本）
-    if (text.startsWith("?(")) {
-  text = text.replace(/^\?`\(/, "").replace(/\)`;?$/, "");
+    // JSONP 去壳（QX 不会篡改的版本）
+if (text.startsWith("?(")) {
+  text = text.replace(new RegExp("^\\?\`\("), "")
+             .replace(new RegExp("\\)`;?$"), "");
 }
+
 
     const obj = JSON.parse(text);
 
