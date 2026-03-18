@@ -7,7 +7,7 @@ const POINTS_HISTORY_KEY = 'manmanbuy_points_history';
 const HISTORY_DAYS = 7;
 
 const SIGN_URL = 'https://basic-ucenter.manmanbuy.com/user/sign';
-const SIGN_REGEX = /basic-ucenter\.manmanbuy\.com\/user\/sign/;
+const SIGN_REGEX = new RegExp("basic-ucenter\\.manmanbuy\\.com\\/user\\/sign");
 
 let magicJS = MagicJS(SCRIPT_NAME, "INFO");
 
@@ -78,25 +78,30 @@ magicJS.post(options, (err, resp, data) => {
   try {
     let text = data.trim();
 
-    // JSONP 去壳（正确版本）
-    // JSONP 去壳（QX 不会篡改的版本）
-if (text.startsWith("?(")) {
-  text = text.replace(new RegExp("^\\?\`\("), "")
-             .replace(new RegExp("\\)`;?$"), "");
-}
-
+    // JSONP 去壳（QX 防篡改版本）
+    if (text.startsWith("?(")) {
+      text = text.replace(new RegExp("^\\?\`\("), "")
+                 .replace(new RegExp("\\)`;?$"), "");
+    }
 
     const obj = JSON.parse(text);
 
+    // ========== 今日已签到 ==========
+    if (obj.code === 4001 || obj.msg.includes("已签到")) {
+      magicJS.notify("📌 今日已签到", "", "明天再来自动领取积分");
+      return magicJS.done();
+    }
+
+    // ========== 签到成功 ==========
     if (obj.ok === 1 && obj.code === 2000) {
       const r = obj.result;
 
-      // ========== 积分变化 ==========
+      // 积分变化
       const lastPoints = magicJS.read(LAST_POINTS_KEY) || 0;
       const diffPoints = r.point - lastPoints;
       magicJS.write(LAST_POINTS_KEY, r.point);
 
-      // ========== 保存历史 ==========
+      // 保存历史
       let pointsHistory = magicJS.read(POINTS_HISTORY_KEY) || [];
       if (pointsHistory[pointsHistory.length - 1] !== r.point) {
         pointsHistory.push(r.point);
@@ -106,7 +111,6 @@ if (text.startsWith("?(")) {
 
       const pointsChart = makeTrendChart(pointsHistory);
 
-      // ========== 通知 ==========
       const msg =
         `🎉 ${r.title}\n` +
         `💎 本次获得：${r.point} 积分（${diffPoints >= 0 ? "+" : ""}${diffPoints}）\n\n` +
