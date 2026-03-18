@@ -129,7 +129,7 @@ if (text.startsWith("?(")) {
 
         // ========== 通知排版 ==========
         const msg =
-          `📅 连续签到：${r.lxDay} 天\n` +
+          `📅 连续签到：${r.lxday} 天\n` +
           `💎 当前积分：${r.points}（${diffPoints >= 0 ? "+" : ""}${diffPoints}）\n` +
           `🪙 金币：${r.coin}（${diffCoins >= 0 ? "+" : ""}${diffCoins}）\n\n` +
           `📈 积分趋势（最近 ${HISTORY_DAYS} 天）\n${pointsChart}\n\n` +
