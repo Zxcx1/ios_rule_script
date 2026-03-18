@@ -1,20 +1,17 @@
 /*
 吾爱破解签到脚本（修复版）
 修复内容：
+- 适配新版签到流程（apply → draw）
 - 修复“脚本待更新”误判
-- 适配新版吾爱破解签到页面
 */
 
 const $ = API('nobyda_52pojie');
 const date = new Date();
 
-// 你的 Cookie（如果用 QX 自动抓取，可留空）
-const CookieWA = '';
-
-// Bark 推送（可留空）
+const CookieWA = ''; // 可留空，使用 QX 自动抓取
 const barkKey = '';
 
-const reqData = {
+const applyURL = {
   url: 'https://www.52pojie.cn/home.php?mod=task&do=apply&id=2',
   headers: {
     Cookie: CookieWA || $.read("COOKIE"),
@@ -22,20 +19,29 @@ const reqData = {
   }
 };
 
+const drawURL = {
+  url: 'https://www.52pojie.cn/home.php?mod=task&do=draw&id=2',
+  headers: applyURL.headers
+};
+
 if ($.env.isRequest) {
   GetCookie();
-} else if (!reqData.headers.Cookie) {
+} else if (!applyURL.headers.Cookie) {
   $.notify('吾爱破解', ``, `未填写/未获取Cookie!`);
   $.done();
-} else if (!reqData.headers.Cookie.includes('_auth=')) {
+} else if (!applyURL.headers.Cookie.includes('_auth=')) {
   $.notify('吾爱破解', ``, `Cookie关键授权字段缺失, 需重新获取!`);
   $.done();
 } else {
-  $.http.get(reqData)
+  sign();
+}
+
+function sign() {
+  $.http.get(applyURL)
+    .then(() => $.http.get(drawURL))
     .then((resp) => {
       const body = resp.body || "";
 
-      // ========== 新版判断逻辑 ==========
       if (body.includes("任务已完成") || body.includes("恭喜您完成任务")) {
         $.msgBody = `${date.getMonth() + 1}月${date.getDate()}日, 签到成功 🎉`;
       }
@@ -49,7 +55,7 @@ if ($.env.isRequest) {
         $.msgBody = "服务器暂停签到 ⚠️";
       }
       else {
-        $.msgBody = "签到状态未知（可能页面更新）";
+        $.msgBody = "签到状态未知（页面可能再次更新）";
       }
     })
     .catch((err) => {
@@ -64,7 +70,6 @@ if ($.env.isRequest) {
     });
 }
 
-// ========== Cookie 获取 ==========
 function GetCookie() {
   const CK = $request.headers['Cookie'] || $request.headers['cookie'];
   if (CK && CK.includes('_auth=')) {
@@ -76,7 +81,6 @@ function GetCookie() {
   $.done();
 }
 
-// ========== Bark 推送 ==========
 async function BarkNotify(c, k, t, b) {
   return new Promise((resolve) => {
     c.post({
@@ -88,9 +92,10 @@ async function BarkNotify(c, k, t, b) {
         device_key: k,
         ext_params: { group: t }
       })
-    }, (e, r, d) => resolve());
+    }, () => resolve());
   });
 }
+
 //Bark APP notify
 async function BarkNotify(c, k, t, b) { for (let i = 0; i < 3; i++) { console.log(`🔷Bark notify >> Start push (${i + 1})`); const s = await new Promise((n) => { c.post({ url: 'https://api.day.app/push', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: t, body: b, device_key: k, ext_params: { group: t } }) }, (e, r, d) => r && r.status == 200 ? n(1) : n(d || e)) }); if (s === 1) { console.log('✅Push success!'); break } else { console.log(`❌Push failed! >> ${s.message || s}`) } } };
 
