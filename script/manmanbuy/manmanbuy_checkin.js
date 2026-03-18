@@ -3,21 +3,15 @@ const COOKIE_KEY = 'manmanbuy_app_cookie';
 const BODY_KEY = 'manmanbuy_app_sign_body';
 
 const LAST_POINTS_KEY = 'manmanbuy_last_points';
-const LAST_COINS_KEY = 'manmanbuy_last_coins';
-
 const POINTS_HISTORY_KEY = 'manmanbuy_points_history';
-const COINS_HISTORY_KEY = 'manmanbuy_coins_history';
-
 const HISTORY_DAYS = 7;
 
-const SIGN_URL = 'https://basic-ucenter.manmanbuy.com/user/sign/info';
-const SIGN_REGEX = /basic-ucenter\.manmanbuy\.com\/user\/sign\/info/;
+const SIGN_URL = 'https://basic-ucenter.manmanbuy.com/user/sign';
+const SIGN_REGEX = /basic-ucenter\.manmanbuy\.com\/user\/sign/;
 
 let magicJS = MagicJS(SCRIPT_NAME, "INFO");
-magicJS.unifiedPushUrl =
-  magicJS.read('manmanbuy_unified_push_url') || magicJS.read('magicjs_unified_push_url');
 
-// ========== 重写阶段：抓取 Cookie + Body ==========
+// ========== 抓取 Cookie + Body ==========
 if (magicJS.isRequest) {
   try {
     if (SIGN_REGEX.test(magicJS.request.url)) {
@@ -50,7 +44,7 @@ if (!cookie || !body) {
 const options = {
   url: SIGN_URL,
   headers: {
-    "Content-Type": "application/x-www-form-urlencoded",
+    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
     "User-Agent":
       "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 - mmbWebBrowse - ios",
     "Cookie": cookie
@@ -58,7 +52,7 @@ const options = {
   body: body
 };
 
-// ========== 工具函数：生成趋势图 ==========
+// ========== 趋势图 ==========
 function makeTrendChart(arr) {
   if (!arr || arr.length === 0) return "无数据";
 
@@ -74,78 +68,59 @@ function makeTrendChart(arr) {
     .join("\n");
 }
 
-// ========== 失败重试机制 ==========
-function doSign(retry = 2) {
-  magicJS.post(options, (err, resp, data) => {
-    if (err) {
-      if (retry > 0) return doSign(retry - 1);
-      magicJS.notify("❌ 签到失败", "", "网络异常：" + err);
-      return magicJS.done();
+// ========== 执行签到 ==========
+magicJS.post(options, (err, resp, data) => {
+  if (err) {
+    magicJS.notify("❌ 签到失败", "", "网络异常：" + err);
+    return magicJS.done();
+  }
+
+  try {
+    let text = data.trim();
+
+    // JSONP 去壳（正确版本）
+    if (text.startsWith("?(")) {
+      text = text.replace(/^\?`\(/, "").replace(/\)`;?$/, "");
     }
 
-    try {
-      let text = data.trim();
+    const obj = JSON.parse(text);
 
-      // JSONP 去壳
-      // JSONP 去壳（不会被 QX 吞字符）
-if (text.startsWith("?(")) {
-  text = text.replace(new RegExp("^\\?\`\("), "")
-             .replace(new RegExp("\\)`;?$"), "");
-}
+    if (obj.ok === 1 && obj.code === 2000) {
+      const r = obj.result;
 
-      const obj = JSON.parse(text);
+      // ========== 积分变化 ==========
+      const lastPoints = magicJS.read(LAST_POINTS_KEY) || 0;
+      const diffPoints = r.point - lastPoints;
+      magicJS.write(LAST_POINTS_KEY, r.point);
 
-      if (obj.ok === 1 || obj.code === 2000) {
-        const r = obj.result;
-
-        // ========== 积分变化 ==========
-        const lastPoints = magicJS.read(LAST_POINTS_KEY) || r.points;
-        const diffPoints = r.points - lastPoints;
-        magicJS.write(LAST_POINTS_KEY, r.points);
-
-        // ========== 金币变化 ==========
-        const lastCoins = magicJS.read(LAST_COINS_KEY) || r.coin;
-        const diffCoins = r.coin - lastCoins;
-        magicJS.write(LAST_COINS_KEY, r.coin);
-
-        // ========== 保存历史数据 ==========
-        let pointsHistory = magicJS.read(POINTS_HISTORY_KEY) || [];
-        let coinsHistory = magicJS.read(COINS_HISTORY_KEY) || [];
-
-        pointsHistory.push(r.points);
-        coinsHistory.push(r.coin);
-
-        if (pointsHistory.length > HISTORY_DAYS) pointsHistory.shift();
-        if (coinsHistory.length > HISTORY_DAYS) coinsHistory.shift();
-
-        magicJS.write(POINTS_HISTORY_KEY, pointsHistory);
-        magicJS.write(COINS_HISTORY_KEY, coinsHistory);
-
-        // ========== 生成趋势图 ==========
-        const pointsChart = makeTrendChart(pointsHistory);
-
-        // ========== 奖励预测（简单模型） ==========
-        const predicted = diffPoints > 0 ? diffPoints : 5;
-
-        // ========== 通知排版 ==========
-        const msg =
-          `📅 连续签到：${r.lxday} 天\n` +
-          `💎 当前积分：${r.points}（${diffPoints >= 0 ? "+" : ""}${diffPoints}）\n` +
-          `🪙 金币：${r.coin}（${diffCoins >= 0 ? "+" : ""}${diffCoins}）\n\n` +
-          `📈 积分趋势（最近 ${HISTORY_DAYS} 天）\n${pointsChart}\n\n` +
-          `🎯 明日预计奖励：+${predicted}`;
-
-        magicJS.notify("🎉 慢慢买签到成功", "", msg);
-      } else {
-        magicJS.notify("❌ 签到失败", "", obj.msg || "未知错误");
+      // ========== 保存历史 ==========
+      let pointsHistory = magicJS.read(POINTS_HISTORY_KEY) || [];
+      if (pointsHistory[pointsHistory.length - 1] !== r.point) {
+        pointsHistory.push(r.point);
       }
-    } catch (e) {
-      magicJS.notify("❌ 签到失败", "", "解析异常：" + e);
-    }
+      if (pointsHistory.length > HISTORY_DAYS) pointsHistory.shift();
+      magicJS.write(POINTS_HISTORY_KEY, pointsHistory);
 
-    magicJS.done();
-  });
-}
+      const pointsChart = makeTrendChart(pointsHistory);
+
+      // ========== 通知 ==========
+      const msg =
+        `🎉 ${r.title}\n` +
+        `💎 本次获得：${r.point} 积分（${diffPoints >= 0 ? "+" : ""}${diffPoints}）\n\n` +
+        `📈 积分趋势（最近 ${HISTORY_DAYS} 天）\n${pointsChart}\n\n` +
+        `🎯 ${r.description}`;
+
+      magicJS.notify("🎉 慢慢买签到成功", "", msg);
+    } else {
+      magicJS.notify("❌ 签到失败", "", obj.msg || "未知错误");
+    }
+  } catch (e) {
+    magicJS.notify("❌ 签到失败", "", "解析异常：" + e);
+  }
+
+  magicJS.done();
+});
+
 
 doSign();
 
