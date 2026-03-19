@@ -5,7 +5,7 @@
 # 慢慢买 - 抓取签到 Cookie + Body
 ^https:\/\/basic-ucenter\.manmanbuy\.com\/user\/sign url script-request-body https://raw.githubusercontent.com/Zxcx1/ios_rule_script/refs/heads/master/script/manmanbuy/manmanbuy_checkin.js
 
-# 慢慢买 - 抓取个人中心 Body（关键！）
-^https:\/\/apapia\.manmanbuy\.com\/index_json\.ashx url script-request-body https://raw.githubusercontent.com/Zxcx1/ios_rule_script/refs/heads/master/script/manmanbuy/manmanbuy_checkin.js
+# 慢慢买 - 抓取个人中心 user/sign/info Body（新接口）
+^https:\/\/basic-ucenter\.manmanbuy\.com\/user\/sign\/info url script-request-body https://raw.githubusercontent.com/Zxcx1/ios_rule_script/refs/heads/master/script/manmanbuy/manmanbuy_checkin.js
 
-hostname = basic-ucenter.manmanbuy.com, apapia.manmanbuy.com
+hostname = basic-ucenter.manmanbuy.com
