@@ -2,10 +2,10 @@
 # [task_local]
 # 5 0 * * * https://raw.githubusercontent.com/Zxcx1/ios_rule_script/refs/heads/master/script/manmanbuy/manmanbuy_checkin.js, tag=慢慢买_每日签到, enabled=true
 
-# 慢慢买 - 抓取签到参数
+# 慢慢买 - 抓签到参数
 ^https:\/\/basic-ucenter\.manmanbuy\.com\/user\/sign url script-request-body https://raw.githubusercontent.com/Zxcx1/ios_rule_script/refs/heads/master/script/manmanbuy/manmanbuy_checkin.js
 
-# 慢慢买 - 抓取个人中心参数
-^https:\/\/basic-ucenter\.manmanbuy\.com\/user\/sign\/info url script-request-body https://raw.githubusercontent.com/Zxcx1/ios_rule_script/refs/heads/master/script/manmanbuy/manmanbuy_checkin.js
+# 慢慢买 - 抓个人中心参数（getuserinfo）
+^https:\/\/apapia\.manmanbuy\.com\/index_json\.ashx url script-request-body https://raw.githubusercontent.com/Zxcx1/ios_rule_script/refs/heads/master/script/manmanbuy/manmanbuy_checkin.js
 
-hostname = basic-ucenter.manmanbuy.com
+hostname = basic-ucenter.manmanbuy.com, apapia.manmanbuy.com
