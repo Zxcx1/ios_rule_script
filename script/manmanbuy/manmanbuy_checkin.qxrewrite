@@ -5,7 +5,7 @@
 [rewrite_local]
 
 # 慢慢买 - 抓 /user/sign/info 的 Body（只需要这一条）
-^https:\/\/basic-ucenter\.manmanbuy\.com\/user\/sign\/info url script-request-body manmanbuy_checkin.js
+^https:\/\/basic-ucenter\.manmanbuy\.com\/user\/sign\/info url script-request-body https://raw.githubusercontent.com/Zxcx1/ios_rule_script/refs/heads/master/script/manmanbuy/manmanbuy_checkin.js
 
 [mitm]
 hostname = basic-ucenter.manmanbuy.com, apapia.manmanbuy.com
