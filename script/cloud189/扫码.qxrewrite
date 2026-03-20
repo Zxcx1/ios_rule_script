@@ -1,2 +1,2 @@
 # 天翼云盘登录成功后，自动抓取 Cookie
-^https:\/\/cloud\.189\.cn\/main\.action url script-response-header cloud189_cookie_capture.js
+^https:\/\/cloud\.189\.cn\/main\.action url script-response-header cloud189.js
