@@ -1,0 +1,4 @@
+# 天翼云盘扫码登录回调
+^https:\/\/cloud\.189\.cn\/api\/portal\/loginUrl.action url script-request-header cloud189_qx.js
+^https:\/\/cloud\.189\.cn\/udb\/web\/oauth\/callback url script-response-header cloud189_qx.js
+
